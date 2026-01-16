@@ -130,15 +130,68 @@ bulkApproveBtn.addEventListener('click', () => handleBulkAction('approve'));
 bulkRejectBtn.addEventListener('click', () => handleBulkAction('reject'));
 
 // 8. Search Functionality
-document.getElementById('searchInput').addEventListener('keyup', (e) => {
-    const term = e.target.value.toLowerCase();
-    const filtered = pendingRequests.filter(r => 
-        r.full_name.toLowerCase().includes(term) || 
-        r.email.toLowerCase().includes(term) ||
-        r.phone_number.toLowerCase().includes(term)
-    );
-    renderTable(filtered);
-});
+// 8. Search, Sort & Filter Functionality
+const searchInput = document.getElementById('searchInput');
+const sortSelect = document.getElementById('sortSelect');
+const filterSelect = document.getElementById('filterSelect');
+
+function applyFilters() {
+    let results = [...pendingRequests]; // Start with full list
+
+    // A. Apply Search
+    const term = searchInput.value.toLowerCase();
+    if (term) {
+        results = results.filter(r => 
+            (r.full_name && r.full_name.toLowerCase().includes(term)) || 
+            (r.email && r.email.toLowerCase().includes(term)) ||
+            (r.phone_number && r.phone_number.toLowerCase().includes(term))
+        );
+    }
+
+    // B. Apply Time Filter
+    const filterValue = filterSelect.value;
+    const now = new Date();
+    // Normalize "today" to start of day for accurate comparison
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (filterValue === 'today') {
+        results = results.filter(r => new Date(r.date_joined) >= startOfToday);
+    } else if (filterValue === 'week') {
+        // Last 7 Days strategy
+        const sevenDaysAgo = new Date(startOfToday);
+        sevenDaysAgo.setDate(startOfToday.getDate() - 7);
+        results = results.filter(r => new Date(r.date_joined) >= sevenDaysAgo);
+    }
+
+    // C. Apply Sorting
+    const sortValue = sortSelect.value;
+    results.sort((a, b) => {
+        const dateA = new Date(a.date_joined);
+        const dateB = new Date(b.date_joined);
+        const nameA = (a.full_name || '').toLowerCase();
+        const nameB = (b.full_name || '').toLowerCase();
+
+        switch (sortValue) {
+            case 'recent':
+                return dateB - dateA;
+            case 'oldest':
+                return dateA - dateB;
+            case 'name_asc':
+                return nameA.localeCompare(nameB);
+            case 'name_desc':
+                return nameB.localeCompare(nameA);
+            default:
+                return 0;
+        }
+    });
+
+    renderTable(results);
+}
+
+// Attach Event Listeners
+searchInput.addEventListener('keyup', applyFilters);
+sortSelect.addEventListener('change', applyFilters);
+filterSelect.addEventListener('change', applyFilters);
 
 // 9. Clock (Consolidated)
 function updateClock() {

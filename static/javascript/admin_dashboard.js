@@ -18,7 +18,7 @@ function getCookie(name) {
 }
 
 // 3. Database API Call
-async function updateStatusInDatabase(userIds, action) {
+async function updateStatusInDatabase(userIds, action, roles = {}) {
     try {
         const response = await fetch('/update-user-status/', {
             method: 'POST',
@@ -26,7 +26,11 @@ async function updateStatusInDatabase(userIds, action) {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken'),
             },
-            body: JSON.stringify({ 'user_ids': userIds, 'action': action })
+            body: JSON.stringify({
+                user_ids: userIds,
+                action: action,
+                roles: roles
+            })
         });
         const data = await response.json();
         return data.status === 'success';
@@ -59,8 +63,21 @@ function renderTable(data) {
                 <td class="py-3"><input type="checkbox" class="registration-checkbox" data-id="${r.id}"></td>
                 <td class="py-3 font-medium">${r.full_name}</td>
                 <td class="py-3">${r.email}</td>
-                <td class="py-3">${r.phone_number}</td> 
+                <td class="py-3">${r.phone_number}</td>
+                <!-- ROLE COLUMN -->
+                <td class="py-3">
+                    <select class="role-select border rounded px-2 py-1 text-xs"
+                            data-id="${r.id}">
+                        <option value="student" ${r.is_student ? "selected" : ""}>
+                            Student
+                        </option>
+                        <option value="teacher" ${r.is_teacher ? "selected" : ""}>
+                            Teacher
+                        </option>
+                    </select>
+                </td>  
                 <td class="py-3 text-xs text-gray-500">${formatDate(r.date_joined)}</td>
+                
                 <td class="py-3 flex gap-2">
                     <button class="px-3 py-1 rounded-lg bg-green-600 text-white text-xs approve-btn" data-id="${r.id}">Approve</button>
                     <button class="px-3 py-1 rounded-lg border border-gray-200 text-xs reject-btn" data-id="${r.id}">Reject</button>
@@ -94,7 +111,21 @@ document.getElementById('registrationTableBody').addEventListener('click', (e) =
 // Modal Confirm Click
 confirmModalBtn.addEventListener('click', async () => {
     confirmModalBtn.disabled = true;
-    const success = await updateStatusInDatabase([currentId], currentAction);
+    let roles = {};
+
+if (currentAction === 'approve') {
+    const roleSelect = document.querySelector(`.role-select[data-id="${currentId}"]`);
+    if (roleSelect) {
+        roles[currentId] = roleSelect.value;
+    }
+}
+
+const success = await updateStatusInDatabase(
+    [currentId],
+    currentAction,
+    roles
+);
+
     if (success) {
         pendingRequests = pendingRequests.filter(r => r.id !== currentId);
         renderTable(pendingRequests);

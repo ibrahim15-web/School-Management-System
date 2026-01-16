@@ -231,19 +231,24 @@
           <th class="py-2">Name</th>
           <th class="py-2">Email</th>
           <th class="py-2">Phone</th>
+          <th class="py-2">role</th>
           <th class="py-2">Requested</th>
           <th class="py-2">Action</th>
         </tr>
       </thead>
 
       <tbody id="registrationTableBody">
-          </tbody>
+      </tbody>
+      {{ pending_users_json|json_script:"pending-users-data" }}
+      <script src="{% static 'javascript/admin_dashboard.js' %}"></script>
+
 
     </table>
   </div>
 
   <div id="no-requests-message" class="text-sm text-gray-500 mt-4 hidden text-center py-4">No pending requests found.</div>
 </div>
+
 
 <!-- Confirmation Modal -->
 <div id="confirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">

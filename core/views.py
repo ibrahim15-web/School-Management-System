@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render, get_object_or_404
 from accounts.models import CustomUser
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -33,8 +33,17 @@ def admin_dashboard(request):
     # Prepare data for JS (Search/Sort functionality)
     # We convert the queryset to a list of dictionaries
     pending_users_list = list(pending_users_queryset.values(
-        'id', 'username', 'email', 'phone_number', 'date_joined', 'first_name', 'last_name'
-    ))
+    'id',
+    'username',
+    'email',
+    'phone_number',
+    'date_joined',
+    'first_name',
+    'last_name',
+    'is_student',
+    'is_teacher',
+))
+
     # Convert UUIDs and Dates to strings for JSON compatibility
     for user in pending_users_list:
         user['id'] = str(user['id'])
@@ -52,17 +61,42 @@ def admin_dashboard(request):
     return render(request, 'pages/admin_dashboard.html', context)
 @login_required
 def update_user_status(request):
-    """API Endpoint to approve or reject users via AJAX"""
-    if request.method == 'POST' and request.user.is_staff:
+    """API Endpoint to approve or reject users via AJAX with role support"""
+    if request.method == "POST" and request.user.is_staff:
         data = json.loads(request.body)
-        user_ids = [uuid.UUID(uid) for uid in data.get('user_ids', [])]
-        action = data.get('action') # 'approve' or 'reject'
-        queryset = CustomUser.objects.filter(id__in=user_ids)
 
-        if action == 'approve':
-            queryset.update(is_member_of_this_school=True, is_active=True, status='approved')
-        elif action == 'reject':
-            queryset.update(is_active=False, status='rejected', is_member_of_this_school=False)
-        
-        return JsonResponse({'status': 'success'})
-    return JsonResponse({'status': 'error'}, status=400)
+        user_ids = data.get("user_ids", [])
+        action = data.get("action")
+        roles = data.get("roles", {})
+
+        for user_id in user_ids:
+            user = CustomUser.objects.get(id=user_id)
+
+            if action == "approve":
+                role = roles.get(user_id)
+
+                # Reset roles
+                user.is_student = False
+                user.is_teacher = False
+                user.is_parent = False
+
+                # Apply selected role
+                if role == "student":
+                    user.is_student = True
+                elif role == "teacher":
+                    user.is_teacher = True
+
+                user.status = "approved"
+                user.is_active = True
+                user.is_member_of_this_school = True
+
+            elif action == "reject":
+                user.status = "rejected"
+                user.is_active = False
+                user.is_member_of_this_school = False
+
+            user.save()
+
+        return JsonResponse({"status": "success"})
+
+    return JsonResponse({"status": "error"}, status=400)

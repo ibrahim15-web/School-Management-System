@@ -3,6 +3,7 @@ from accounts.models import CustomUser
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
+from django.db import transaction
 from django.contrib import messages
 import json
 import uuid
@@ -33,14 +34,26 @@ def admin_dashboard(request):
     # Prepare data for JS (Search/Sort functionality)
     # We convert the queryset to a list of dictionaries
     pending_users_list = list(pending_users_queryset.values(
-        'id', 'username', 'email', 'phone_number', 'date_joined', 'first_name', 'last_name'
-    ))
+    'id',
+    'username',
+    'email',
+    'phone_number',
+    'date_joined',
+    'first_name',
+    'last_name',
+    'is_student',
+    'is_teacher',))
     # Convert UUIDs and Dates to strings for JSON compatibility
     for user in pending_users_list:
         user['id'] = str(user['id'])
         user['date_joined'] = user['date_joined'].strftime('%Y-%m-%dT%H:%M:%S')
         user['full_name'] = f"{user['first_name']} {user['last_name']}".strip() or user['username']
-
+        if user['is_student']:
+            user['role'] = 'student'
+        elif user['is_teacher']:
+            user['role'] = 'teacher'
+        else:
+            user['role'] = 'student'  # safe default
     context = {
         "pending_count": pending_users_queryset.count(),
         "pending_students": pending_users_queryset.filter(is_student=True).count(),
@@ -54,15 +67,49 @@ def admin_dashboard(request):
 def update_user_status(request):
     """API Endpoint to approve or reject users via AJAX"""
     if request.method == 'POST' and request.user.is_staff:
-        data = json.loads(request.body)
-        user_ids = [uuid.UUID(uid) for uid in data.get('user_ids', [])]
-        action = data.get('action') # 'approve' or 'reject'
-        queryset = CustomUser.objects.filter(id__in=user_ids)
+        try:
+            data = json.loads(request.body)
+            action = data.get('action') # 'approve' or 'reject'
+            users_data = data.get('users', [])
+            if action == 'approve':
+                with transaction.atomic():
+                    for item in users_data:
+                        try:
+                            user = CustomUser.objects.get(id=item['id'])
+                            role = item.get("role")
+                            ROLE_MAP = {
+                                'student': 'is_student',
+                                'teacher': 'is_teacher',
+                                'parent': 'is_parent',
+                                'admin': 'is_admin',}
+                            # 1. Reset all role flags first (Ensures ONLY ONE role)
+                            user.is_student = False
+                            user.is_teacher = False
+                            user.is_parent = False
+                            user.is_staff = False
+                            # Assign role safely
+                            if role in ROLE_MAP:
+                                setattr(user, ROLE_MAP[role], True)
+                            else:
+                                raise ValueError("Invalid role")
+                            user.is_member_of_this_school = True
+                            user.is_active = True
+                            user.status = 'approved'
+                            user.save()
 
-        if action == 'approve':
-            queryset.update(is_member_of_this_school=True, is_active=True, status='approved')
-        elif action == 'reject':
-            queryset.update(is_active=False, status='rejected', is_member_of_this_school=False)
-        
-        return JsonResponse({'status': 'success'})
-    return JsonResponse({'status': 'error'}, status=400)
+                        except CustomUser.DoesNotExist:
+                            continue
+            elif action == 'reject':
+                ids_to_reject = [item['id'] for item in users_data]
+                CustomUser.objects.filter(id__in=ids_to_reject).update(
+                    is_active=False,
+                    status='rejected',
+                    is_member_of_this_school=False
+                )
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
+            
+            return JsonResponse({'status': 'success'})
+        except (ValueError, TypeError, json.JSONDecodeError, KeyError):
+            return JsonResponse({'status': 'error', 'message': 'Invalid data format'}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Unauthorized or invalid method'}, status=403)    

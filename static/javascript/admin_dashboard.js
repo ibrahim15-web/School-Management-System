@@ -18,7 +18,7 @@ function getCookie(name) {
 }
 
 // 3. Database API Call
-async function updateStatusInDatabase(userIds, action) {
+async function updateStatusInDatabase(payload) {
     try {
         const response = await fetch('/update-user-status/', {
             method: 'POST',
@@ -26,7 +26,7 @@ async function updateStatusInDatabase(userIds, action) {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken'),
             },
-            body: JSON.stringify({ 'user_ids': userIds, 'action': action })
+            body: JSON.stringify(payload)
         });
         const data = await response.json();
         return data.status === 'success';
@@ -35,7 +35,6 @@ async function updateStatusInDatabase(userIds, action) {
         return false;
     }
 }
-
 // 4. Formatting Helpers
 function formatDate(dateString) {
     const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
@@ -59,7 +58,17 @@ function renderTable(data) {
                 <td class="py-3"><input type="checkbox" class="registration-checkbox" data-id="${r.id}"></td>
                 <td class="py-3 font-medium">${r.full_name}</td>
                 <td class="py-3">${r.email}</td>
-                <td class="py-3">${r.phone_number}</td> 
+                <td class="py-3">${r.phone_number}</td>
+                <!-- ROLE COLUMN -->
+                <td class="py-3">
+                    <select
+                        class="role-select px-2 py-1 rounded-lg border border-gray-300 text-xs"data-id="${r.id}">
+                        <option value="student" ${r.role === 'student' ? 'selected' : ''}>Student</option>
+                        <option value="teacher" ${r.role === 'teacher' ? 'selected' : ''}>Teacher</option>
+                        <option value="parent" ${r.role === 'parent' ? 'selected' : ''}>Parent</option>
+                        <option value="admin" ${r.role === 'admin' ? 'selected' : ''}>Admin</option>
+                    </select>
+                </td>
                 <td class="py-3 text-xs text-gray-500">${formatDate(r.date_joined)}</td>
                 <td class="py-3 flex gap-2">
                     <button class="px-3 py-1 rounded-lg bg-green-600 text-white text-xs approve-btn" data-id="${r.id}">Approve</button>
@@ -91,10 +100,25 @@ document.getElementById('registrationTableBody').addEventListener('click', (e) =
     }
 });
 
-// Modal Confirm Click
+// Modal Confirm Click (FIXED)
 confirmModalBtn.addEventListener('click', async () => {
     confirmModalBtn.disabled = true;
-    const success = await updateStatusInDatabase([currentId], currentAction);
+
+    // Capture role for this specific ID
+    const roleSelect = document.querySelector(`.role-select[data-id="${currentId}"]`);
+    const selectedRole = roleSelect ? roleSelect.value : null;
+
+    // NEW FORMAT: Wrap the single user into a "users" list of objects
+    let payload = {
+        action: currentAction,
+        users: [{
+            id: currentId,
+            role: selectedRole
+        }]
+    };
+
+    const success = await updateStatusInDatabase(payload);
+
     if (success) {
         pendingRequests = pendingRequests.filter(r => r.id !== currentId);
         renderTable(pendingRequests);
@@ -102,6 +126,7 @@ confirmModalBtn.addEventListener('click', async () => {
     } else {
         showToast("Server error. Please try again.");
     }
+
     confirmModalBtn.disabled = false;
     confirmModal.classList.add('hidden');
 });
@@ -113,18 +138,57 @@ const bulkApproveBtn = document.getElementById('bulkApprove');
 const bulkRejectBtn = document.getElementById('bulkReject');
 
 async function handleBulkAction(action) {
-    const selectedIds = Array.from(document.querySelectorAll('.registration-checkbox:checked')).map(cb => cb.dataset.id);
-    if (selectedIds.length === 0) return;
+    const selectedCheckboxes = document.querySelectorAll('.registration-checkbox:checked');
 
-    const success = await updateStatusInDatabase(selectedIds, action);
+    if (selectedCheckboxes.length === 0) return;
+
+    let payload = {
+        action: action,
+        users: Array.from(selectedCheckboxes).map(cb => {
+            const userId = cb.dataset.id;
+            const roleSelect = document.querySelector(`.role-select[data-id="${userId}"]`);
+            return {
+                id: userId,
+                role: roleSelect ? roleSelect.value : 'student' // default for reject/misc
+            };
+        })
+    };
+
+    if (action === 'approve') {
+        payload.users = Array.from(selectedCheckboxes).map(cb => {
+            const userId = cb.dataset.id;
+            const roleSelect = document.querySelector(
+                `.role-select[data-id="${userId}"]`
+            );
+
+            return {
+                id: userId,
+                role: roleSelect ? roleSelect.value : null
+            };
+        });
+    } else {
+        payload.user_ids = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+    }
+
+    const success = await updateStatusInDatabase(payload);
+
     if (success) {
-        pendingRequests = pendingRequests.filter(r => !selectedIds.includes(r.id));
+        const approvedIds = payload.users
+            ? payload.users.map(u => u.id)
+            : payload.user_ids;
+
+        pendingRequests = pendingRequests.filter(
+            r => !approvedIds.includes(r.id)
+        );
+
         renderTable(pendingRequests);
-        showToast(`${selectedIds.length} users ${action}d.`);
+        showToast(`${approvedIds.length} users ${action}d.`);
         document.getElementById('selectAllCheckbox').checked = false;
     }
+
     document.getElementById('bulkActionsMenu').classList.add('hidden');
 }
+
 
 bulkApproveBtn.addEventListener('click', () => handleBulkAction('approve'));
 bulkRejectBtn.addEventListener('click', () => handleBulkAction('reject'));

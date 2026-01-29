@@ -81,7 +81,7 @@ def update_user_status(request):
                                 'student': 'is_student',
                                 'teacher': 'is_teacher',
                                 'parent': 'is_parent',
-                                'admin': 'is_admin',}
+                                'admin': 'is_staff',}
                             # 1. Reset all role flags first (Ensures ONLY ONE role)
                             user.is_student = False
                             user.is_teacher = False

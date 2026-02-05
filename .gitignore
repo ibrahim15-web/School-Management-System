@@ -19,3 +19,5 @@ media/
 
 # Collected static (OK to ignore)
 staticfiles/
+
+.env

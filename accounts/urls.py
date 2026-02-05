@@ -1,6 +1,4 @@
 from django.urls import path
-from .views import approve_user
-
 from . import views
 urlpatterns = [
     path('login/', views.login, name='login'),
@@ -13,7 +11,7 @@ urlpatterns = [
     path('profile/update/', views.profile_update, name='profile_update'),
     path('update_password/', views.update_password, name='update_password'),
     path('waiting-approval/', views.waiting_approval, name='waiting_approval'),
-    path('approve/<int:user_id>/', approve_user, name='approve_user'),
+    # path('approve/<int:user_id>/', approve_user, name='approve_user'),
     
 
 ]

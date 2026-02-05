@@ -20,6 +20,8 @@ class CustomUser(AbstractUser):
     is_parent = models.BooleanField(default=False)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     is_member_of_this_school = models.BooleanField(default=False)
+    rejection_reason = models.TextField(null=True, blank=True)
+
     
 
     def __str__(self):

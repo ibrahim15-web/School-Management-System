@@ -251,11 +251,32 @@
 <div id="confirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
   <div class="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-2xl w-full max-w-sm border border-gray-200 dark:border-gray-800">
     <h3 class="text-lg font-bold mb-2">Confirm Action</h3>
-    <p id="modalMessage" class="text-sm text-gray-600 dark:text-gray-300 mb-5">Are you sure you want to [action] this request?</p>
+
+    <p id="modalMessage" class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+      Are you sure you want to [action] this request?
+    </p>
+
+    <!-- REJECT REASON (hidden by default) -->
+    <div id="rejectReasonWrapper" class="hidden mb-4">
+      <label class="block text-sm font-medium mb-1">Rejection reason</label>
+      <textarea
+        id="rejectReasonInput"
+        rows="3"
+        class="w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"
+        placeholder="Explain why the registration is rejected..."
+      ></textarea>
+      <p class="text-xs text-gray-500 mt-1">
+        This reason will be sent to the rejected user(s).
+      </p>
+    </div>
 
     <div class="flex justify-end gap-2">
-      <button id="cancelModalBtn" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">Cancel</button>
-      <button id="confirmModalBtn" class="px-4 py-2 rounded-xl text-white bg-brand-600 hover:bg-brand-700">Confirm</button>
+      <button id="cancelModalBtn" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
+        Cancel
+      </button>
+      <button id="confirmModalBtn" class="px-4 py-2 rounded-xl text-white bg-brand-600 hover:bg-brand-700">
+        Confirm
+      </button>
     </div>
   </div>
 </div>

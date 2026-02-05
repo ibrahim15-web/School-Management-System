@@ -13,36 +13,6 @@ import time
 
 User = get_user_model()
 
-def login(request):
-    if request.method == "POST":
-        email = request.POST.get("email")
-        password = request.POST.get("password")
-
-        try:
-            user_obj = User.objects.get(email=email)
-
-            if not user_obj.is_member_of_this_school:
-                messages.error(request, "Your account is awaiting approval.")
-                return redirect("login")
-            elif not user_obj.is_active:
-                messages.error(request, "Your account is disabled.")
-
-                return redirect("login")
-
-            user = authenticate(request, username=user_obj.username, password=password)
-
-            if user is not None:
-                auth_login(request, user)
-                return redirect("home")
-            else:
-                messages.error(request, "Incorrect password")
-
-        except User.DoesNotExist:
-            messages.error(request, "Invalid email or password")
-            return redirect("login")
-
-    return render(request, "accounts/login.html")
-
 def register(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -105,41 +75,48 @@ def register(request):
         return redirect("waiting_approval")
     return render(request, "accounts/register.html")
 
+def login(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+
+        try:
+            user_obj = User.objects.get(email=email)
+
+            if user_obj.status == "rejected":
+                messages.error(
+                    request,
+                    "Your registration request was rejected. Please contact the school administration."
+                )
+                return redirect("login")
+
+            elif not user_obj.is_member_of_this_school:
+                messages.error(request, "Your account is awaiting approval.")
+                return redirect("login")
+            elif not user_obj.is_active:
+                messages.error(request, "Your account is disabled.")
+
+                return redirect("login")
+
+            user = authenticate(request, username=user_obj.username, password=password)
+
+            if user is not None:
+                auth_login(request, user)
+                return redirect("home")
+            else:
+                messages.error(request, "Incorrect password")
+
+        except User.DoesNotExist:
+            messages.error(request, "Invalid email or password")
+            return redirect("login")
+
+    return render(request, "accounts/login.html")
+
+
 def logout(request):
     auth_logout(request)
     messages.success(request, "You have logged out successfully!")
     return redirect("login")
-
-@login_required
-@require_POST
-def approve_user(request):
-    if not (request.user.is_staff or request.user.is_superuser):
-        return JsonResponse({'error': 'Not allowed'}, status=403)
-
-    user_id = request.POST.get('user_id')
-    user = get_object_or_404(
-        User,
-        id=user_id,
-        is_member_of_this_school=False
-    )
-    user.is_active = True
-    user.is_member_of_this_school = True
-    user.save()
-
-    # Email approved user (recommended)
-    if user.email:
-        send_mail(
-            subject="Your account has been approved",
-            message="Your account has been approved. You can now log in.",
-            from_email="noreply@school.com",
-            recipient_list=[user.email],
-            fail_silently=True,
-        )
-
-    # admins = User.objects.filter(is_staff=True)
-    # emails = [admin.email for admin in admins if admin.email]
-
-    return JsonResponse({'success': True})
 
 def waiting_approval(request):
     return render(request, "accounts/waiting_approval.html")

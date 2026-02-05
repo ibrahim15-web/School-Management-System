@@ -1,10 +1,13 @@
 from django.shortcuts import render
 from accounts.models import CustomUser
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.db import transaction
+import logging
 from django.contrib import messages
+from django.core.mail import send_mass_mail
 import json
 import uuid
 
@@ -63,14 +66,18 @@ def admin_dashboard(request):
         "pending_users_json": pending_users_list, # For JS
     }
     return render(request, 'pages/admin_dashboard.html', context)
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 @login_required
-def update_user_status(request):
+def process_pending_registrations(request):
     """API Endpoint to approve or reject users via AJAX"""
     if request.method == 'POST' and request.user.is_staff:
         try:
             data = json.loads(request.body)
             action = data.get('action') # 'approve' or 'reject'
             users_data = data.get('users', [])
+            email_messages = []
             if action == 'approve':
                 with transaction.atomic():
                     for item in users_data:
@@ -97,18 +104,62 @@ def update_user_status(request):
                             user.status = 'approved'
                             user.save()
 
+                            if user.email:
+                                email_messages.append((
+                                    "Your account has been approved",
+                                    f"Hi {user.username}, your account has been approved as a {role}.\nSo now you can log in.",
+                                    settings.EMAIL_HOST_USER,
+                                    [user.email]
+                                ))
+
                         except CustomUser.DoesNotExist:
                             continue
+                
             elif action == 'reject':
-                ids_to_reject = [item['id'] for item in users_data]
-                CustomUser.objects.filter(id__in=ids_to_reject).update(
-                    is_active=False,
-                    status='rejected',
-                    is_member_of_this_school=False
-                )
+                reason = data.get('reason', '').strip()
+                with transaction.atomic():
+                    for item in users_data:
+                        try:
+                            user = CustomUser.objects.get(id=item['id'])
+                            # Clear roles
+                            user.is_student = False
+                            user.is_teacher = False
+                            user.is_parent = False
+                            user.is_staff = False
+
+                            user.is_active = False
+                            user.is_member_of_this_school = False
+                            user.status = 'rejected'
+                            
+                            if hasattr(user, 'rejection_reason'):
+                                user.rejection_reason = reason
+
+                            user.save()
+
+                            if user.email:
+                                message = f"Hi {user.username}, your registration request has been rejected."
+                                if reason:
+                                    message += f"\n\nReason: {reason}"
+
+                                email_messages.append((
+                                    "Registration Request Rejected",
+                                    message,
+                                    settings.EMAIL_HOST_USER,
+                                    [user.email]
+                                ))
+
+                        except CustomUser.DoesNotExist:
+                            continue
             else:
                 return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
             
+            if email_messages:
+                try:
+                    send_mass_mail(email_messages, fail_silently=False)
+                except Exception as e:
+                    logger.error(f"Email failed to send: {e}")
+                    return JsonResponse({'status': 'partial_success', 'message': 'Users updated, but emails failed to send.'})
+
             return JsonResponse({'status': 'success'})
         except (ValueError, TypeError, json.JSONDecodeError, KeyError):
             return JsonResponse({'status': 'error', 'message': 'Invalid data format'}, status=400)

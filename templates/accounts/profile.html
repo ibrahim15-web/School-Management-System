@@ -40,7 +40,7 @@
             </p>
             <p class="text-gray-600 dark:text-gray-300 mb-1">
               <span class="font-semibold">Role:</span>
-              {% if user.is_staff %}Admin{% elif user.is_teacher %}Teacher{% elif user.is_student %}Student{% elif user.is_parent %}Parent{% else %}User{% endif %}
+              {{ user.display_role }}
             </p>
             <div class="mt-4 flex gap-2">
               <a

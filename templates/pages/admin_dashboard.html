@@ -27,57 +27,54 @@
   </div>
 </div>
 
-<!-- KPI Cards -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+  <!-- KPI Cards -->
+  <!-- KPI Cards: Pending Breakdown (2 columns) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+    <!-- Pending Students -->
+    <div class="p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+      <p class="text-xs text-gray-500">Pending Students</p>
+      <p class="text-3xl font-extrabold mt-1 text-yellow-600">{{ pending_students }}</p>
+    </div>
 
-  <!-- Pending Breakdown -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
-
-  <!-- Pending Students -->
-  <div class="p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-    <p class="text-xs text-gray-500">Pending Students</p>
-    <p class="text-3xl font-extrabold mt-1 text-yellow-600">{{ pending_students }}</p>
+    <!-- Pending Teachers -->
+    <div class="p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+      <p class="text-xs text-gray-500">Pending Teachers</p>
+      <p class="text-3xl font-extrabold mt-1 text-yellow-600">{{ pending_teachers }}</p>
+    </div>
   </div>
 
-  <!-- Pending Teachers -->
-  <div class="p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-    <p class="text-xs text-gray-500">Pending Teachers</p>
-    <p class="text-3xl font-extrabold mt-1 text-yellow-600">{{ pending_teachers }}</p>
+  <!-- KPI Cards: Main Stats (5 columns) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    <!-- Total Students -->
+    <a href="#pending-requests" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <p class="text-xs text-gray-500">Total Students</p>
+      <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">{{ total_students }}</p>
+    </a>
+
+    <!-- Student Attendance Today -->
+    <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <p class="text-xs text-gray-500">Students Attendance (today)</p>
+      <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">92%</p>
+    </a>
+
+    <!-- Total Teachers -->
+    <a href="#pending-requests" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <p class="text-xs text-gray-500">Total Teachers</p>
+      <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">{{ total_teachers }}</p>
+    </a>
+
+    <!-- Teacher Attendance Today -->
+    <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <p class="text-xs text-gray-500">Teacher Attendance (today)</p>
+      <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">92%</p>
+    </a>
+
+    <!-- Pending Registrations -->
+    <a href="#pending-requests" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <p class="text-xs text-gray-500">Pending registrations</p>
+      <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">{{ pending_count }}</p>
+    </a>
   </div>
-
-</div>
-
-  <!-- Total Students -->
-  <a href="#pending-requests" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-    <p class="text-xs text-gray-500">Total Students</p>
-    <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">{{ total_students }}</p>
-  </a>
-
-  <!-- Student Attendance Today -->
-  <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-    <p class="text-xs text-gray-500">Students Attendance (today)</p>
-    <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">92%</p>
-  </a>
-
-  <!-- Total Teachers -->
-  <a href="#pending-requests" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-    <p class="text-xs text-gray-500">Total Teachers</p>
-    <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">{{ total_teachers }}</p>
-  </a>
-
-  <!-- Teacher Attendance Today -->
-  <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-    <p class="text-xs text-gray-500">Teacher Attendance (today)</p>
-    <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">92%</p>
-  </a>
-
-  <!-- Pending Registrations -->
-  <a href="#pending-requests" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-    <p class="text-xs text-gray-500">Pending registrations</p>
-    <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">{{ pending_count }}</p>
-  </a>
-
-</div>
     <!-- Improved Quick Actions Section: Cleaner, More Modern, Animated, Accessible -->
     <section id="quick-actions" class="py-6">
       <div class="flex items-end justify-between gap-4 mb-6">

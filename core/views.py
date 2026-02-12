@@ -239,7 +239,7 @@ def process_pending_registrations(request):
                             email_messages.append((
                                 "Registration Request Update",
                                 f"Hi {user.username},\n\n"
-                                f"Your registration request has been reviewed.\n\n"
+                                f"Your registration request has been rejected.\n\n"
                                 f"Reason: {reason}\n\n"
                                 f"If you have questions, please contact the school administration.\n\n"
                                 f"Best regards,\n"

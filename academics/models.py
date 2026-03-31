@@ -18,8 +18,8 @@ Design Philosophy:
 """
 
 from django.db import models
-import uuid
 from django.core.exceptions import ValidationError
+import uuid
 
 
 class AcademicYear(models.Model):
@@ -269,3 +269,152 @@ class Class(models.Model):
     def is_full(self):
         """Check if class has reached capacity"""
         return self.current_enrollment >= self.capacity
+
+class TeachingAssignment(models.Model):
+    """
+    Teaching Assignment — Connects Teacher to Subject and Class per Academic Year
+    
+    WHY THIS MODEL EXISTS:
+    - Teachers teach multiple subjects to multiple classes
+    - Subject-Class-Teacher relationships change every academic year
+    - We need to track who teaches what to whom and when
+    - Required for: Attendance, Timetable, Exams, Grades, Teacher workload
+    
+    BUSINESS RULES:
+    1. Teacher must have is_teacher=True
+    2. Teacher must be approved and member of school
+    3. Subject must be taught in the assigned class
+    4. No duplicate assignments (same teacher-subject-class-year)
+    5. Academic year must match class academic year
+    
+    RELATIONSHIPS:
+    - Belongs to one Teacher (CustomUser where is_teacher=True)
+    - Belongs to one Subject
+    - Belongs to one Class
+    - Belongs to one AcademicYear
+    
+    EXAMPLE:
+    "Mr. Smith teaches Mathematics to Grade 10-A in 2024-2025"
+    """
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    teacher = models.ForeignKey(
+        'accounts.CustomUser',  # String reference to avoid circular import
+        on_delete=models.CASCADE,
+        related_name='teaching_assignments',
+        limit_choices_to={'is_teacher': True},
+        help_text="Teacher assigned to teach this subject"
+    )
+    
+    subject = models.ForeignKey(
+        'Subject',
+        on_delete=models.CASCADE,
+        related_name='teaching_assignments',
+        help_text="Subject being taught"
+    )
+    
+    class_assigned = models.ForeignKey(
+        'Class',
+        on_delete=models.CASCADE,
+        related_name='teaching_assignments',
+        help_text="Class receiving instruction"
+    )
+    
+    academic_year = models.ForeignKey(
+        'AcademicYear',
+        on_delete=models.CASCADE,
+        related_name='teaching_assignments',
+        help_text="Academic year for this assignment"
+    )
+    
+    assigned_at = models.DateField(
+        auto_now_add=True,
+        help_text="Date when assignment was created"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['academic_year', 'class_assigned', 'subject']
+        verbose_name = "Teaching Assignment"
+        verbose_name_plural = "Teaching Assignments"
+        
+        # CRITICAL: Prevent duplicate assignments
+        constraints = [
+            models.UniqueConstraint(
+                fields=['teacher', 'subject', 'class_assigned', 'academic_year'],
+                name='unique_teaching_assignment'
+            )
+        ]
+        
+        # Performance indexes
+        indexes = [
+            models.Index(fields=['teacher', 'academic_year']),
+            models.Index(fields=['class_assigned', 'academic_year']),
+            models.Index(fields=['subject', 'academic_year']),
+        ]
+    
+    def __str__(self):
+        return f"{self.teacher.get_full_name() or self.teacher.username} teaches {self.subject.name} to {self.class_assigned.name} ({self.academic_year.name})"
+    
+    def clean(self):
+        """
+        Model-level validation enforcing business rules
+        """
+        
+        # 1️⃣ Ensure teacher is actually a teacher
+        if not self.teacher.is_teacher:
+            raise ValidationError({
+                'teacher': "Selected user is not a teacher."
+            })
+        
+        # 2️⃣ Ensure teacher is approved
+        if self.teacher.status != 'approved':
+            raise ValidationError({
+                'teacher': "Teacher must be approved before assignment."
+            })
+        
+        # 3️⃣ Ensure teacher is a member of the school
+        if not self.teacher.is_member_of_this_school:
+            raise ValidationError({
+                'teacher': "Teacher must be a member of this school."
+            })
+        
+        # 4️⃣ Ensure academic year matches class academic year
+        if self.class_assigned.academic_year != self.academic_year:
+            raise ValidationError({
+                'academic_year': f"Class belongs to {self.class_assigned.academic_year.name}, not {self.academic_year.name}."
+            })
+        
+        # 5️⃣ Ensure subject is taught in this class
+        if not self.class_assigned.subjects.filter(id=self.subject.id).exists():
+            raise ValidationError({
+                'subject': f"{self.subject.name} is not taught in {self.class_assigned.name}. Add it to the class first."
+            })
+    
+    def save(self, *args, **kwargs):
+        """Enforce validation before saving"""
+        self.full_clean()
+        super().save(*args, **kwargs)
+    
+    @property
+    def enrolled_students(self):
+        """
+        Get all students enrolled in this class (for this academic year).
+        
+        These are the students this teacher will teach.
+        """
+        from students.models import Enrollment
+        
+        return Enrollment.objects.filter(
+            class_assigned=self.class_assigned,
+            academic_year=self.academic_year,
+            status='active'
+        )
+    
+    @property
+    def student_count(self):
+        """Get count of students in this assignment"""
+        return self.enrolled_students.count()

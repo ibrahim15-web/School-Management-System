@@ -20,6 +20,7 @@ Design Philosophy:
 from django.db import models
 from django.core.exceptions import ValidationError
 import uuid
+from accounts.models import CustomUser
 
 
 class AcademicYear(models.Model):

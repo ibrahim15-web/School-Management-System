@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto py-8">
+
+    <h1 class="text-xl font-bold mb-4 dark:text-white">
+        {{ assignment.class_assigned.name }} - Attendance
+    </h1>
+    {% if is_edit_mode %}
+        <div class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded mb-3">
+            Editing existing attendance
+        </div>
+    {% else %}
+        <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded mb-3">
+            New attendance entry
+        </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="mb-4">
+            <input type="date" name="date" value="{{ selected_date }}"
+                   class="border p-2 rounded dark:bg-gray-900 dark:text-white">
+        </div>
+
+        <table class="w-full text-sm">
+            <thead class="bg-gray-100 dark:bg-gray-800">
+                <tr>
+                    <th class="p-2 text-left">Name</th>
+                    <th class="p-2 text-center">Present</th>
+                    <th class="p-2 text-center">Absent</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for student in students %}
+                <tr class="border-b dark:border-gray-800">
+                    <td class="p-2 dark:text-white">
+                        {{ student }}
+                    </td>
+                    
+                    {% with attendance_dict|get_item:student.id as record %}
+                    <td class="p-2 text-center">
+                        <label class="inline-flex items-center gap-1 dark:text-white">
+                            <input type="radio" name="student_{{ student.id }}" value="present"
+                            {% if record and record.status == 'present' %} checked {% endif %}>
+                            Present
+                        </label>
+                    </td>
+
+                    <td class="p-2 text-center">
+                        <label class="inline-flex items-center gap-1 dark:text-white">
+                            <input type="radio" name="student_{{ student.id }}" value="absent"
+                            {% if record and record.status == 'absent' %} checked {% endif %}>
+                            Absent
+                        </label>
+                    </td>
+                    {% endwith %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="submit"
+            {% if existing_attendance %} disabled {% endif %}
+            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50">
+
+            {% if existing_attendance %}
+                Already Submitted
+            {% else %}
+                Save Attendance
+            {% endif %}
+        </button>
+    </form>
+</div>
+{% endblock %}

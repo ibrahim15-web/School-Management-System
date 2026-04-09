@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-8">
+
+    <h1 class="text-2xl font-bold mb-6 dark:text-white">
+        Take Attendance
+    </h1>
+
+    <div class="grid md:grid-cols-3 gap-4">
+
+        {% for assignment in assignments %}
+        <a href="{% url 'mark_attendance' assignment.id %}"
+           class="p-4 bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl hover:shadow">
+
+            <h2 class="font-semibold dark:text-white">
+                {{ assignment.class_assigned.name }}
+            </h2>
+
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                {{ assignment.subject.name }}
+            </p>
+
+        </a>
+        {% endfor %}
+
+    </div>
+
+</div>
+{% endblock %}

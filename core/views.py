@@ -1,16 +1,20 @@
-from django.shortcuts import render
-from accounts.models import CustomUser
-from django.conf import settings
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.db import transaction
-import logging
-from django.contrib import messages
-from django.core.mail import send_mass_mail
 import json
 import uuid
+import logging
+from django.http import JsonResponse
+from django.db import transaction
+from django.core.mail import send_mass_mail
+from datetime import timedelta
+from django.utils import timezone
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from django.contrib import messages
+# Local import
+from accounts.models import CustomUser
+from teachers.analytics import get_last_7_days_attendance, get_today_attendance_summary, get_last_7_days_teacher_attendance
+from teachers.models import Attendance
 
-# Create your views here.
 
 def home(request):
     total_students = CustomUser.objects.filter(is_student=True, is_member_of_this_school=True).count()
@@ -29,7 +33,7 @@ def admin_dashboard(request):
         messages.error(request, 'You do not have permission to access the admin dashboard.')
         return render(request, 'pages/home.html', {})
 
-    # Fetching Data
+    # --- Pending users ---
     pending_users_queryset = CustomUser.objects.filter(
     is_member_of_this_school=False).exclude(status='rejected').order_by('-date_joined')
 
@@ -56,13 +60,36 @@ def admin_dashboard(request):
             user['role'] = 'teacher'
         else:
             user['role'] = 'student'  # safe default
-    context = {
+    # --- Attendance chart data (last 7 days) ---
+    attendance_chart = get_last_7_days_attendance()
+    # --- Teacher Attendance chart data (last 7 days) ---
+    teacher_attendance_chart = get_last_7_days_teacher_attendance()
+
+    # --- Today's summary ---
+    today_summary = get_today_attendance_summary()
+
+    context = { 
+        # Pending registrations
         "pending_count": pending_users_queryset.count(),
         "pending_students": pending_users_queryset.filter(is_student=True).count(),
         "pending_teachers": pending_users_queryset.filter(is_teacher=True).count(),
+        # Totals
         "total_students": CustomUser.objects.filter(is_student=True, is_member_of_this_school=True).count(),
         "total_teachers": CustomUser.objects.filter(is_teacher=True, is_member_of_this_school=True).count(),
-        "pending_users_json": pending_users_list, # For JS
+        # AFTER — pass raw Python lists, json_script handles the rest:
+        'attendance_chart_labels':  attendance_chart['labels'],
+        'attendance_chart_present': attendance_chart['present'],
+        'attendance_chart_absent':  attendance_chart['absent'],
+        'teacher_chart_labels': teacher_attendance_chart['labels'],
+        'teacher_chart_present': teacher_attendance_chart['present'],
+        'teacher_chart_absent': teacher_attendance_chart['absent'],
+        # Today's summary
+        'today_present': today_summary['present'],
+        'today_absent': today_summary['absent'],
+        'today_total': today_summary['total'],
+        'today_percentage': today_summary['percentage'],
+        # Pending users for JS table
+        "pending_users_json": pending_users_list,
     }
     return render(request, 'pages/admin_dashboard.html', context)
 

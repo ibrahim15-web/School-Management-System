@@ -1,45 +1,65 @@
+import uuid
 from django.db import models
 from accounts.models import CustomUser
-from academics.models import *
+from academics.models import Class, AcademicYear
 
-class Attendance(models.Model):
+class Attendance(models.Model):   
+    STATUS_PRESENT = 'present'
+    STATUS_ABSENT = 'absent'
+    STATUS_CHOICES = [
+        (STATUS_PRESENT, 'Present'),
+        (STATUS_ABSENT, 'Absent'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     student = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
-        related_name='student_attendance'
+        related_name='student_attendance',
+        limit_choices_to={'is_student': True}
     )
-
-    class_assigned = models.ForeignKey(Class, on_delete=models.CASCADE)
-    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE)
-
-    date = models.DateField()
-
+    class_assigned = models.ForeignKey(
+        Class,
+        on_delete=models.CASCADE,
+        related_name='attendance_records'
+    )
+    academic_year = models.ForeignKey(
+        AcademicYear,
+        on_delete=models.CASCADE,
+        related_name='attendance_records'
+    )
+    date = models.DateField(db_index=True)  # indexed for date-range queries
     status = models.CharField(
         max_length=10,
-        choices=[('present', 'Present'), ('absent', 'Absent')],
-        default='present'
+        choices=STATUS_CHOICES,
+        default=STATUS_PRESENT,
+        db_index=True   # indexed for filtering by status
     )
-
     marked_by = models.ForeignKey(
         CustomUser,
         on_delete=models.SET_NULL,
         null=True,
         related_name='marked_attendance'
     )
-
-    updated_at = models.DateTimeField(auto_now=True)
-
     updated_by = models.ForeignKey(
         CustomUser,
         on_delete=models.SET_NULL,
         null=True,
         related_name='updated_attendance'
     )
+    created_at = models.DateTimeField(auto_now_add=True)  # restored
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ('student', 'class_assigned', 'academic_year', 'date')
-
+        indexes = [
+            # Covers: "give me all records for this class in this date range"
+            models.Index(fields=['class_assigned', 'date']),
+            # Covers: "give me all records for this student"
+            models.Index(fields=['student', 'date']),
+            # Covers: "give me last 7 days school-wide"
+            models.Index(fields=['date', 'status']),
+        ]
     def __str__(self):
         return f"{self.student} - {self.date} - {self.status}"

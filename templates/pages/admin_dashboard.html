@@ -1,288 +1,546 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Admin Dashboard{% endblock %}
-  <!-- Load Chart.js for data visualization -->
-  {% block extra_head_scripts %}
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Load Font Awesome for icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}?v=1">
-  {% endblock %}
+
+{% block extra_head_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}?v=1">
+{% endblock %}
+
 {% block content %}
-  <!-- Main content container -->
-  <div class="max-w-7xl mx-auto px-4 py-8">
-    <!-- Header with Personalized Greeting -->
-    <!-- Enhanced Dashboard Header + KPIs -->
-<div class="flex items-center justify-between gap-4 mb-8">
-  <!-- Welcome Section -->
-  <div class="space-y-1">
-    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Welcome, Admin </h1>
-    <p class="text-sm text-gray-600 dark:text-gray-300">Overview of school activity and quick actions.</p>
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+  {# ============================================================ #}
+  {# HEADER — unchanged from before                               #}
+  {# ============================================================ #}
+  <div class="flex items-center justify-between gap-4 mb-8">
+    <div class="space-y-1">
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
+        Welcome, Admin
+      </h1>
+      <p class="text-sm text-gray-600 dark:text-gray-300">
+        Overview of school activity and quick actions.
+      </p>
+    </div>
+
+    <div class="flex flex-col items-end text-right bg-white dark:bg-gray-900
+                border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-2 shadow-sm">
+      <span id="current-time" class="text-lg font-semibold"></span>
+      <span id="current-date" class="text-xs text-gray-500"></span>
+    </div>
   </div>
 
-  <!-- Time + Date -->
-  <div class="flex flex-col items-end text-right bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-2 shadow-sm">
-    <span id="current-time" class="text-lg font-semibold"></span>
-    <span id="current-date" class="text-xs text-gray-500"></span>
-  </div>
-</div>
+  {# ============================================================ #}
+  {# NEW — ATTENDANCE SUMMARY CARDS (real data from Django)       #}
+  {# ============================================================ #}
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
-  <!-- KPI Cards -->
-  <!-- KPI Cards: Pending Breakdown (2 columns) -->
+    {# Total Students #}
+    <div class="p-5 rounded-2xl bg-white border border-gray-100
+                dark:bg-gray-900 dark:border-gray-800 shadow-soft
+                hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Total Students
+          </p>
+          <p class="mt-2 text-3xl font-extrabold text-blue-600 dark:text-blue-400">
+            {{ total_students }}
+          </p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Active & enrolled
+          </p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20
+                    flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-user-graduate text-xl text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+
+    {# Present Today #}
+    <div class="p-5 rounded-2xl bg-white border border-gray-100
+                dark:bg-gray-900 dark:border-gray-800 shadow-soft
+                hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Present Today
+          </p>
+          <p class="mt-2 text-3xl font-extrabold text-green-600 dark:text-green-400">
+            {{ today_present }}
+          </p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            of {{ today_total }} recorded
+          </p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/20
+                    flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-circle-check text-xl text-green-600 dark:text-green-400"></i>
+        </div>
+      </div>
+    </div>
+
+    {# Absent Today #}
+    <div class="p-5 rounded-2xl bg-white border border-gray-100
+                dark:bg-gray-900 dark:border-gray-800 shadow-soft
+                hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Absent Today
+          </p>
+          <p class="mt-2 text-3xl font-extrabold text-red-600 dark:text-red-400">
+            {{ today_absent }}
+          </p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            of {{ today_total }} recorded
+          </p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-900/20
+                    flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-circle-xmark text-xl text-red-600 dark:text-red-400"></i>
+        </div>
+      </div>
+    </div>
+
+    {# Attendance Percentage #}
+    <div class="p-5 rounded-2xl bg-white border border-gray-100
+                dark:bg-gray-900 dark:border-gray-800 shadow-soft
+                hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Attendance Rate
+          </p>
+          <p class="mt-2 text-3xl font-extrabold
+                    {% if today_percentage >= 85 %}text-green-600 dark:text-green-400
+                    {% elif today_percentage >= 60 %}text-yellow-600 dark:text-yellow-400
+                    {% else %}text-red-600 dark:text-red-400{% endif %}">
+            {{ today_percentage }}%
+          </p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Today</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/20
+                    flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-chart-pie text-xl text-purple-600 dark:text-purple-400"></i>
+        </div>
+      </div>
+
+      {# Progress bar — visual representation of percentage #}
+      <div class="mt-4">
+        <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
+          <div class="h-1.5 rounded-full
+                      {% if today_percentage >= 85 %}bg-green-500
+                      {% elif today_percentage >= 60 %}bg-yellow-500
+                      {% else %}bg-red-500{% endif %}"
+               style="width: {{ today_percentage }}%">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {# ============================================================ #}
+  {# PENDING BREAKDOWN — unchanged from before                    #}
+  {# ============================================================ #}
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-    <!-- Pending Students -->
-    <div class="p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+    <div class="p-5 rounded-2xl bg-white border border-gray-100
+                dark:bg-gray-900 dark:border-gray-800 shadow-soft">
       <p class="text-xs text-gray-500">Pending Students</p>
       <p class="text-3xl font-extrabold mt-1 text-yellow-600">{{ pending_students }}</p>
     </div>
-
-    <!-- Pending Teachers -->
-    <div class="p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+    <div class="p-5 rounded-2xl bg-white border border-gray-100
+                dark:bg-gray-900 dark:border-gray-800 shadow-soft">
       <p class="text-xs text-gray-500">Pending Teachers</p>
       <p class="text-3xl font-extrabold mt-1 text-yellow-600">{{ pending_teachers }}</p>
     </div>
   </div>
 
-  <!-- KPI Cards: Main Stats (5 columns) -->
+  {# ============================================================ #}
+  {# MAIN STATS ROW — unchanged from before                       #}
+  {# ============================================================ #}
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-    <!-- Total Students -->
-    <a href="#pending-requests" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+    <a href="#pending-requests"
+       class="group p-5 rounded-2xl bg-white border border-gray-100
+              dark:bg-gray-900 dark:border-gray-800 shadow-soft
+              hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       <p class="text-xs text-gray-500">Total Students</p>
       <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">{{ total_students }}</p>
     </a>
-
-    <!-- Student Attendance Today -->
-    <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+    <a href="#"
+       class="group p-5 rounded-2xl bg-white border border-gray-100
+              dark:bg-gray-900 dark:border-gray-800 shadow-soft
+              hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       <p class="text-xs text-gray-500">Students Attendance (today)</p>
-      <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">92%</p>
+      <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">
+        {{ today_percentage }}%
+      </p>
     </a>
-
-    <!-- Total Teachers -->
-    <a href="#pending-requests" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+    <a href="#pending-requests"
+       class="group p-5 rounded-2xl bg-white border border-gray-100
+              dark:bg-gray-900 dark:border-gray-800 shadow-soft
+              hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       <p class="text-xs text-gray-500">Total Teachers</p>
       <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">{{ total_teachers }}</p>
     </a>
-
-    <!-- Teacher Attendance Today -->
-    <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+    <a href="#"
+       class="group p-5 rounded-2xl bg-white border border-gray-100
+              dark:bg-gray-900 dark:border-gray-800 shadow-soft
+              hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       <p class="text-xs text-gray-500">Teacher Attendance (today)</p>
-      <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">92%</p>
+      <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">—</p>
     </a>
-
-    <!-- Pending Registrations -->
-    <a href="#pending-requests" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-      <p class="text-xs text-gray-500">Pending registrations</p>
+    <a href="#pending-requests"
+       class="group p-5 rounded-2xl bg-white border border-gray-100
+              dark:bg-gray-900 dark:border-gray-800 shadow-soft
+              hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <p class="text-xs text-gray-500">Pending Registrations</p>
       <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">{{ pending_count }}</p>
     </a>
   </div>
-    <!-- Improved Quick Actions Section: Cleaner, More Modern, Animated, Accessible -->
-    <section id="quick-actions" class="py-6">
-      <div class="flex items-end justify-between gap-4 mb-6">
-        <div>
-          <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Quick Actions</h2>
-          <p class="mt-2 text-gray-600 dark:text-gray-300">High-frequency tasks for admins, teachers, and students.</p>
-        </div>
-      </div>
 
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-        <!-- Create Timetable -->
-        <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-          <div class="flex items-center gap-3">
-            <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-brand-50 text-brand-600 group-hover:bg-brand-100 transition-colors">
-              <i class="fa-solid fa-calendar-days text-xl"></i>
-            </span>
-            <div>
-              <p class="font-semibold">Create timetable</p>
-              <p class="text-xs text-gray-500">Design class schedules</p>
-            </div>
-          </div>
-        </a>
-
-        <!-- Record Attendance -->
-        <a href="#" class="group p-5 rounded-2xl bg-purple-600 border border-purple-700 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-          <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <div class="flex items-center gap-3 relative z-10">
-            <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-white text-purple-600 shadow-md">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 7v10a2 2 0 0 0 2 2h14"></path>
-                <path d="M7 3h7l4 4v9"></path>
-                <path d="M8 14h8"></path>
-                <path d="M8 10h8"></path>
-                <path d="M16 19l2 2 4-4"></path>
-              </svg>
-            </span>
-
-            <div>
-              <p class="font-bold text-white">Record attendance</p>
-              <p class="text-xs text-purple-100">Mark daily presence</p>
-            </div>
-          </div>
-        </a>
-
-        <!-- Post Announcement -->
-        <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-          <div class="flex items-center gap-3">
-            <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-brand-50 text-brand-600 group-hover:bg-brand-100 transition-colors">
-              <i class="fa-solid fa-bullhorn text-xl"></i>
-            </span>
-            <div>
-              <p class="font-semibold">Post announcement</p>
-              <p class="text-xs text-gray-500">Share updates schoolwide</p>
-            </div>
-          </div>
-        </a>
-
-        <!-- Enroll Student -->
-        <a href="#" class="group p-5 rounded-2xl bg-purple-600 border border-purple-700 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-          <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <div class="flex items-center gap-3 relative z-10">
-            <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-white text-purple-600 shadow-md">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="8" y="2" width="8" height="4" rx="1"></rect>
-                <path d="M9 7h6v14H9z"></path>
-                <path d="M9 12l2 2 4-4"></path>
-              </svg>
-            </span>
-            <div>
-              <p class="font-bold text-white">Enroll student</p>
-              <p class="text-xs text-purple-100">Add new profiles</p>
-            </div>
-          </div>
-        </a>
-
-      </div>
-    </section>
-    <!-- Main content area with chart and table -->
-    <div class="grid md:grid-cols-2 gap-6 mt-6">
-      <!-- Students Attendance chart card -->
-      <div class="p-6 rounded-3xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-        <div class="flex items-center justify-between mb-4">
-          <p class="font-medium">Students Attendance - Last 7 Days</p>
-          <p class="text-xs text-gray-500">Today: 88%</p>
-        </div>
-        <div id="students-attendance-sparkline" class="h-36">
-          <canvas id="studentsAttendanceChart"></canvas>
-        </div>
-      </div>
-      <!-- Teachers Attendance chart card -->
-      <div class="p-6 rounded-3xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-        <div class="flex items-center justify-between mb-4">
-          <p class="font-medium">Teachers Attendance - Last 7 Days</p>
-          <p class="text-xs text-gray-500">Today: 92%</p>
-        </div>
-        <div id="teachers-attendance-sparkline" class="h-36">
-          <canvas id="teachersAttendanceChart"></canvas>
-        </div>
-      </div>
-    </div> 
-      <!-- Pending registration table with search and bulk actions -->
-      <!-- Enhanced Pending Registration Requests UI with Phone Number Column -->
-<div id="pending-requests" class="p-6 rounded-3xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-  <div class="flex items-center justify-between mb-6">
-    <p class="font-semibold text-lg tracking-tight">Pending Registration Requests</p>
-    <a href="#" class="text-xs text-gray-500 hover:underline">View all</a>
-  </div>
-
-  <!-- Search + Filter Section -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
-    <input type="text" id="searchInput" placeholder="Search name, email, or phone..." class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-600">
-
-    <select id="sortSelect" class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 focus:outline-none">
-      <option value="recent">Sort by: Most Recent</option>
-      <option value="oldest">Oldest First</option>
-      <option value="name_asc">Name (A-Z)</option>
-      <option value="name_desc">Name (Z-A)</option>
-    </select>
-
-    <select id="filterSelect" class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 focus:outline-none">
-      <option value="all">Filter: All</option>
-      <option value="today">Requested Today</option>
-      <option value="week">This Week</option>
-    </select>
-  </div>
-
-  <!-- Bulk Actions -->
-  <div class="flex items-center justify-between mb-4">
-    <label class="text-sm font-medium flex items-center">
-      <input type="checkbox" id="selectAllCheckbox" class="mr-2 rounded-md text-brand-600">Select All
-    </label>
-
-    <div class="relative inline-block text-left">
-      <button id="bulkActionsBtn" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none flex items-center gap-1">
-        Bulk Actions <i class="fa-solid fa-chevron-down text-xs"></i>
-      </button>
-
-      <div id="bulkActionsMenu" class="absolute right-0 mt-2 w-44 origin-top-right bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 rounded-xl shadow-lg hidden z-10">
-        <a href="#" id="bulkApprove" class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Approve Selected</a>
-        <a href="#" id="bulkReject" class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">Reject Selected</a>
+  {# ============================================================ #}
+  {# QUICK ACTIONS — unchanged from before                        #}
+  {# ============================================================ #}
+  <section id="quick-actions" class="py-6">
+    <div class="flex items-end justify-between gap-4 mb-6">
+      <div>
+        <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Quick Actions</h2>
+        <p class="mt-2 text-gray-600 dark:text-gray-300">
+          High-frequency tasks for admins, teachers, and students.
+        </p>
       </div>
     </div>
-  </div>
 
-  <!-- Registration table -->
-  <div class="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-800">
-    <table class="min-w-full text-sm">
-      <thead class="text-left text-xs text-gray-500">
-        <tr>
-          <th class="py-2"></th>
-          <th class="py-2">Name</th>
-          <th class="py-2">Email</th>
-          <th class="py-2">Phone</th>
-          <th class="py-2">Role</th>
-          <th class="py-2">Requested</th>
-          <th class="py-2">Action</th>
-        </tr>
-      </thead>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100
+                         dark:bg-gray-900 dark:border-gray-800 shadow-soft
+                         hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div class="flex items-center gap-3">
+          <span class="inline-grid place-items-center w-12 h-12 rounded-xl
+                       bg-brand-50 text-brand-600 group-hover:bg-brand-100 transition-colors">
+            <i class="fa-solid fa-calendar-days text-xl"></i>
+          </span>
+          <div>
+            <p class="font-semibold">Create timetable</p>
+            <p class="text-xs text-gray-500">Design class schedules</p>
+          </div>
+        </div>
+      </a>
 
-      <tbody id="registrationTableBody">
-          </tbody>
+      <a href="#" class="group p-5 rounded-2xl bg-purple-600 border border-purple-700
+                         dark:bg-gray-900 dark:border-gray-800 shadow-soft
+                         hover:shadow-xl hover:-translate-y-1 transition-all duration-300
+                         relative overflow-hidden">
+        <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="flex items-center gap-3 relative z-10">
+          <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-white text-purple-600 shadow-md">
+            <i class="fa-solid fa-clipboard-check text-xl"></i>
+          </span>
+          <div>
+            <p class="font-bold text-white">Record attendance</p>
+            <p class="text-xs text-purple-100">Mark daily presence</p>
+          </div>
+        </div>
+      </a>
 
-    </table>
-  </div>
+      <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100
+                         dark:bg-gray-900 dark:border-gray-800 shadow-soft
+                         hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div class="flex items-center gap-3">
+          <span class="inline-grid place-items-center w-12 h-12 rounded-xl
+                       bg-brand-50 text-brand-600 group-hover:bg-brand-100 transition-colors">
+            <i class="fa-solid fa-bullhorn text-xl"></i>
+          </span>
+          <div>
+            <p class="font-semibold">Post announcement</p>
+            <p class="text-xs text-gray-500">Share updates schoolwide</p>
+          </div>
+        </div>
+      </a>
 
-  <div id="no-requests-message" class="text-sm text-gray-500 mt-4 hidden text-center py-4">No pending requests found.</div>
-</div>
+      <a href="#" class="group p-5 rounded-2xl bg-purple-600 border border-purple-700
+                         dark:bg-gray-900 dark:border-gray-800 shadow-soft
+                         hover:shadow-xl hover:-translate-y-1 transition-all duration-300
+                         relative overflow-hidden">
+        <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="flex items-center gap-3 relative z-10">
+          <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-white text-purple-600 shadow-md">
+            <i class="fa-solid fa-user-plus text-xl"></i>
+          </span>
+          <div>
+            <p class="font-bold text-white">Enroll student</p>
+            <p class="text-xs text-purple-100">Add new profiles</p>
+          </div>
+        </div>
+      </a>
+    </div>
+  </section>
 
-<!-- Confirmation Modal -->
-<div id="confirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
-  <div class="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-2xl w-full max-w-sm border border-gray-200 dark:border-gray-800">
-    <h3 class="text-lg font-bold mb-2">Confirm Action</h3>
+  {# ============================================================ #}
+  {# UPDATED — CHARTS WITH REAL DATA                             #}
+  {# ============================================================ #}
+  <div class="mt-6">
+  <div class="p-6 rounded-3xl bg-white border border-gray-100
+              dark:bg-gray-900 dark:border-gray-800 shadow-soft">
 
-    <p id="modalMessage" class="text-sm text-gray-600 dark:text-gray-300 mb-4">
-      Are you sure you want to [action] this request?
+    <div class="flex items-center justify-between mb-1">
+      <p class="font-semibold text-gray-900 dark:text-white">
+        Attendance — Last 7 Days
+      </p>
+      <div class="flex gap-3 text-xs">
+        <span class="flex items-center gap-1 text-green-600 dark:text-green-400">
+          <span class="w-2 h-2 bg-green-500 rounded-full"></span> Present
+        </span>
+        <span class="flex items-center gap-1 text-red-600 dark:text-red-400">
+          <span class="w-2 h-2 bg-red-500 rounded-full"></span> Absent
+        </span>
+      </div>
+    </div>
+
+    <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+      Today: {{ today_present }} present / {{ today_absent }} absent
     </p>
 
-    <!-- REJECT REASON (hidden by default) -->
-    <div id="rejectReasonWrapper" class="hidden mb-4">
-      <label class="block text-sm font-medium mb-1">Rejection reason</label>
-      <textarea
-        id="rejectReasonInput"
-        rows="3"
-        class="w-full rounded-xl border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"
-        placeholder="Explain why the registration is rejected..."
-      ></textarea>
-      <p class="text-xs text-gray-500 mt-1">
-        This reason will be sent to the rejected user(s).
-      </p>
+    <div class="h-64">
+      <canvas id="attendanceChart"></canvas>
     </div>
 
-    <div class="flex justify-end gap-2">
-      <button id="cancelModalBtn" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
-        Cancel
-      </button>
-      <button id="confirmModalBtn" class="px-4 py-2 rounded-xl text-white bg-brand-600 hover:bg-brand-700">
-        Confirm
-      </button>
+  </div>
+</div>
+<!-- Teacher chart -->
+<div class="mt-6">
+  <div class="p-6 rounded-3xl bg-white border border-gray-100
+              dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+
+    <p class="font-semibold text-gray-900 dark:text-white mb-4">
+      Teacher Attendance — Last 7 Days
+    </p>
+
+    <div class="h-64">
+      <canvas id="teacherAttendanceChart"></canvas>
     </div>
+
   </div>
 </div>
 
-<!-- Toast Notification -->
-<div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white px-4 py-3 rounded-xl shadow-lg transition-all transform translate-y-10 opacity-0 duration-500 z-50">
-  <span id="toastMessage"></span>
+  {# ============================================================ #}
+  {# UPDATED — PENDING REGISTRATION TABLE (improved design)       #}
+  {# ============================================================ #}
+  <div id="pending-requests"
+       class="mt-6 p-6 rounded-3xl bg-white border border-gray-100
+              dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <p class="font-semibold text-lg tracking-tight text-gray-900 dark:text-white">
+          Pending Registration Requests
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          Review and assign roles before approving
+        </p>
+      </div>
+      <a href="#" class="text-xs text-gray-500 hover:underline">View all</a>
+    </div>
+
+    {# Search + Filter #}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+      <input type="text" id="searchInput"
+             placeholder="Search name, email, or phone..."
+             class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                    bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                    placeholder-gray-400 dark:placeholder-gray-500
+                    focus:outline-none focus:ring-2 focus:ring-brand-600
+                    text-sm transition-colors" />
+
+      <select id="sortSelect"
+              class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                     bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300
+                     focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm">
+        <option value="recent">Sort by: Most Recent</option>
+        <option value="oldest">Oldest First</option>
+        <option value="name_asc">Name (A–Z)</option>
+        <option value="name_desc">Name (Z–A)</option>
+      </select>
+
+      <select id="filterSelect"
+              class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                     bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300
+                     focus:outline-none focus:ring-2 focus:ring-brand-600 text-sm">
+        <option value="all">Filter: All</option>
+        <option value="today">Requested Today</option>
+        <option value="week">This Week</option>
+      </select>
+    </div>
+
+    {# Bulk Actions Bar #}
+    <div class="flex items-center justify-between mb-4">
+      <label class="text-sm font-medium text-gray-700 dark:text-gray-300
+                    flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" id="selectAllCheckbox"
+               class="rounded border-gray-300 dark:border-gray-600
+                      text-brand-600 focus:ring-brand-500" />
+        Select All
+      </label>
+
+      <div class="relative inline-block text-left">
+        <button id="bulkActionsBtn"
+                class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                       text-sm text-gray-700 dark:text-gray-300
+                       hover:bg-gray-100 dark:hover:bg-gray-800
+                       focus:outline-none flex items-center gap-1.5 transition-colors">
+          Bulk Actions
+          <i class="fa-solid fa-chevron-down text-xs"></i>
+        </button>
+
+        <div id="bulkActionsMenu"
+             class="absolute right-0 mt-2 w-44 origin-top-right
+                    bg-white dark:bg-gray-800
+                    border border-gray-200 dark:border-gray-700
+                    rounded-xl shadow-lg hidden z-10 overflow-hidden">
+          <a href="#" id="bulkApprove"
+             class="flex items-center gap-2 px-4 py-2.5 text-sm
+                    text-green-700 dark:text-green-400
+                    hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors">
+            <i class="fa-solid fa-check text-xs"></i>
+            Approve Selected
+          </a>
+          <a href="#" id="bulkReject"
+             class="flex items-center gap-2 px-4 py-2.5 text-sm
+                    text-red-700 dark:text-red-400
+                    hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+            <i class="fa-solid fa-xmark text-xs"></i>
+            Reject Selected
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {# Table #}
+    <div class="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-800">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-800/60">
+          <tr class="text-left text-xs font-medium text-gray-500 dark:text-gray-400
+                     uppercase tracking-wider">
+            <th class="px-4 py-3 w-8"></th>
+            <th class="px-4 py-3">Name</th>
+            <th class="px-4 py-3">Email</th>
+            <th class="px-4 py-3">Phone</th>
+            <th class="px-4 py-3">Role</th>
+            <th class="px-4 py-3">Requested</th>
+            <th class="px-4 py-3">Action</th>
+          </tr>
+        </thead>
+        <tbody id="registrationTableBody"
+               class="divide-y divide-gray-100 dark:divide-gray-800">
+          {# Rows injected by admin_dashboard.js #}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="no-requests-message"
+         class="hidden text-center py-12">
+      <div class="inline-flex items-center justify-center w-14 h-14
+                  rounded-full bg-gray-100 dark:bg-gray-800 mb-3">
+        <i class="fa-solid fa-inbox text-2xl text-gray-400 dark:text-gray-600"></i>
+      </div>
+      <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
+        No pending requests found
+      </p>
+    </div>
+  </div>
+
+  {# ============================================================ #}
+  {# CONFIRM MODAL — unchanged from before                        #}
+  {# ============================================================ #}
+  <div id="confirmModal"
+       class="fixed inset-0 bg-gray-900/60 dark:bg-black/70 hidden
+              flex items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-2xl w-full max-w-sm
+                border border-gray-200 dark:border-gray-800">
+      <h3 class="text-lg font-bold mb-2 text-gray-900 dark:text-white">
+        Confirm Action
+      </h3>
+      <p id="modalMessage" class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+        Are you sure you want to proceed?
+      </p>
+
+      <div id="rejectReasonWrapper" class="hidden mb-4">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Rejection reason
+        </label>
+        <textarea id="rejectReasonInput" rows="3"
+                  class="w-full rounded-xl border border-gray-300 dark:border-gray-700
+                         px-3 py-2 text-sm bg-white dark:bg-gray-800
+                         text-gray-900 dark:text-gray-100
+                         focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Explain why this registration is rejected...">
+        </textarea>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          This reason will be emailed to the user.
+        </p>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button id="cancelModalBtn"
+                class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                       text-sm text-gray-700 dark:text-gray-300
+                       hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          Cancel
+        </button>
+        <button id="confirmModalBtn"
+                class="px-4 py-2 rounded-xl text-sm text-white
+                       bg-brand-600 hover:bg-brand-700 transition-colors">
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+<!-- json_script for attendacne chart  -->
+{{ attendance_chart_labels|json_script:"att-labels" }}
+{{ attendance_chart_present|json_script:"att-present" }}
+{{ attendance_chart_absent|json_script:"att-absent" }}
+<!-- json_script for teacher chart  -->
+{{ teacher_chart_labels|json_script:"teacher-labels" }}
+{{ teacher_chart_present|json_script:"teacher-present" }}
+{{ teacher_chart_absent|json_script:"teacher-absent" }}
+  {# ============================================================ #}
+  {# TOAST — unchanged from before                                #}
+  {# ============================================================ #}
+  <div id="toast"
+       class="fixed bottom-5 right-5 bg-gray-800 dark:bg-gray-700
+              text-white px-4 py-3 rounded-xl shadow-lg
+              transition-all transform translate-y-10 opacity-0 duration-500 z-50">
+    <span id="toastMessage" class="text-sm"></span>
+  </div>
+
 </div>
+
+{# ============================================================ #}
+{# DATA BRIDGE — Django context → JavaScript                    #}
+{#                                                              #}
+{# Why here and not in admin_dashboard.js:                     #}
+{# JS files are static — they cannot read Django template vars. #}
+{# This block runs before admin_dashboard.js loads,            #}
+{# so the JS file finds these globals already defined.         #}
+{# ============================================================ #}
 {{ pending_users_json|json_script:"pending-users-data" }}
 
-<script src="{% static 'javascript/admin_dashboard.js' %}"></script> 
+<script>
+  // json_script renders a <script type="application/json"> tag safely.
+  // We read it with JSON.parse — no red underlines, no escaping issues.
+  window.ATTENDANCE_LABELS  = JSON.parse(
+      document.getElementById('att-labels').textContent
+  );
+  window.ATTENDANCE_PRESENT = JSON.parse(
+      document.getElementById('att-present').textContent
+  );
+  window.ATTENDANCE_ABSENT  = JSON.parse(
+      document.getElementById('att-absent').textContent
+  );
+</script>
+
+<script src="{% static 'javascript/admin_dashboard.js' %}"></script>
+
 {% endblock %}

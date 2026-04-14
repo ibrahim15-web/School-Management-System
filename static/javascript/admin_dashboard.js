@@ -565,43 +565,79 @@ if (selectAllCheckbox) {
 }
 
 // B. Chart.js Initialization Logic
-function initAttendanceChart(canvasId, dataPoints, lineColor) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return null;
-    const ctx = canvas.getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 120);
-    gradient.addColorStop(0, lineColor + '33');
-    gradient.addColorStop(1, lineColor + '00');
 
-    return new Chart(ctx, {
+const ctx = document.getElementById('attendanceChart');
+
+if (ctx) {
+    new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                data: dataPoints,
-                borderColor: lineColor,
-                backgroundColor: gradient,
-                fill: true,
-                tension: 0.4,
-                borderWidth: 2,
-                pointRadius: 0
-            }]
+            labels: window.ATTENDANCE_LABELS,
+            datasets: [
+                {
+                    label: 'Present',
+                    data: window.ATTENDANCE_PRESENT,
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(34,197,94,0.1)',
+                    borderColor: 'rgb(34,197,94)',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                },
+                {
+                    label: 'Absent',
+                    data: window.ATTENDANCE_ABSENT,
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(239,68,68,0.1)',
+                    borderColor: 'rgb(239,68,68)',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+
+            plugins: {
+                legend: {
+                    labels: {
+                        color: document.documentElement.classList.contains('dark')
+                            ? '#e5e7eb'
+                            : '#374151'
+                    }
+                }
+            },
+
             scales: {
-                x: { display: false },
-                y: { display: false, min: 0, max: 100 }
+                x: {
+                    ticks: {
+                        color: document.documentElement.classList.contains('dark')
+                            ? '#9ca3af'
+                            : '#6b7280'
+                    },
+                    grid: {
+                        color: 'rgba(156,163,175,0.1)'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: document.documentElement.classList.contains('dark')
+                            ? '#9ca3af'
+                            : '#6b7280'
+                    },
+                    grid: {
+                        color: 'rgba(156,163,175,0.1)'
+                    }
+                }
             }
         }
     });
 }
-
-// Initialize the charts
-initAttendanceChart('studentsAttendanceChart', [85, 88, 92, 90, 87, 89, 88], '#0284c7');
-initAttendanceChart('teachersAttendanceChart', [95, 94, 96, 92, 95, 93, 92], '#6d28d9');
 
 // C. Toast Helper
 function showToast(message) {
@@ -619,3 +655,104 @@ function showToast(message) {
         toast.classList.add('translate-y-10', 'opacity-0');
     }, 3000);
 }
+const combinedCtx = document.getElementById('attendanceChart');
+
+if (combinedCtx) {
+    new Chart(combinedCtx, {
+        type: 'line',
+        data: {
+            labels: window.ATTENDANCE_LABELS,
+            datasets: [
+                {
+                    label: 'Present',
+                    data: window.ATTENDANCE_PRESENT,
+                    borderColor: '#16a34a',
+                    backgroundColor: 'rgba(22,163,74,0.15)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                },
+                {
+                    label: 'Absent',
+                    data: window.ATTENDANCE_ABSENT,
+                    borderColor: '#dc2626',
+                    backgroundColor: 'rgba(220,38,38,0.15)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    labels: {
+                        color: document.documentElement.classList.contains('dark')
+                            ? '#e5e7eb'
+                            : '#374151'
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    ticks: {
+                        color: document.documentElement.classList.contains('dark')
+                            ? '#9ca3af'
+                            : '#6b7280'
+                    },
+                    grid: {
+                        color: 'rgba(156,163,175,0.1)'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: document.documentElement.classList.contains('dark')
+                            ? '#9ca3af'
+                            : '#6b7280'
+                    },
+                    grid: {
+                        color: 'rgba(156,163,175,0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+// teacher attendance js chart
+const teacherLabels = JSON.parse(document.getElementById('teacher-labels').textContent);
+const teacherPresent = JSON.parse(document.getElementById('teacher-present').textContent);
+const teacherAbsent = JSON.parse(document.getElementById('teacher-absent').textContent);
+
+const ctxTeacher = document.getElementById('teacherAttendanceChart').getContext('2d');
+
+new Chart(ctxTeacher, {
+    type: 'bar',
+    data: {
+        labels: teacherLabels,
+        datasets: [
+            {
+                label: 'Present',
+                data: teacherPresent,
+                borderColor: 'rgb(34,197,94)',
+                backgroundColor: 'rgba(34,197,94,0.2)',
+                tension: 0.3
+            },
+            {
+                label: 'Absent',
+                data: teacherAbsent,
+                borderColor: 'rgb(239,68,68)',
+                backgroundColor: 'rgba(239,68,68,0.2)',
+                tension: 0.3
+            }
+        ]
+    }
+});

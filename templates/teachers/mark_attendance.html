@@ -64,11 +64,9 @@
         </table>
 
         <button type="submit"
-            {% if existing_attendance %} disabled {% endif %}
-            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50">
-
-            {% if existing_attendance %}
-                Already Submitted
+            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            {% if is_edit_mode %}
+                Update Attendance
             {% else %}
                 Save Attendance
             {% endif %}

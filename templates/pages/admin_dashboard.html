@@ -34,6 +34,10 @@
   {# ============================================================ #}
   {# NEW — ATTENDANCE SUMMARY CARDS (real data from Django)       #}
   {# ============================================================ #}
+  <p class="text-xs font-semibold uppercase tracking-widest
+            text-gray-400 dark:text-gray-500 mb-3">
+    Student Attendance — Today
+  </p>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
     {# Total Students #}
@@ -54,7 +58,7 @@
         </div>
         <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20
                     flex items-center justify-center flex-shrink-0">
-          <i class="fa-solid fa-user-graduate text-xl text-blue-600 dark:text-blue-400"></i>
+          <i class="fa-solid fa-graduation-cap"></i>
         </div>
       </div>
     </div>
@@ -141,6 +145,145 @@
       </div>
     </div>
   </div>
+ 
+  {# ============================================================ #}
+  {# NEW — TEACHER ATTENDANCE SUMMARY CARDS                       #}
+  {#                                                              #}
+  {# Data source: get_today_teacher_attendance_summary()          #}
+  {# in teachers/analytics.py, wired through core/views.py       #}
+  {# Context keys: teacher_today_present, teacher_today_absent,   #}
+  {#   teacher_today_total, teacher_today_not_marked,             #}
+  {#   teacher_today_percentage                                   #}
+  {#                                                              #}
+  {# NOTE: teacher_today_total = total active teachers            #}
+  {#       (not just those marked today). This is intentional:    #}
+  {#       an unmarked teacher is unknown, not "present".         #}
+  {# ============================================================ #}
+  <div class="flex items-center justify-between mb-3">
+    <p class="text-xs font-semibold uppercase tracking-widest
+              text-gray-400 dark:text-gray-500">
+      Teacher Attendance — Today
+    </p>
+    <a href="{% url 'mark_teacher_attendance' %}"
+       class="text-xs px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700
+              text-white font-medium transition-colors">
+      Mark Today's Attendance
+    </a>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+ 
+    {# Total Teachers #}
+    <div class="p-5 rounded-2xl bg-white border border-gray-100
+                dark:bg-gray-900 dark:border-gray-800 shadow-soft
+                hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Total Teachers
+          </p>
+          <p class="mt-2 text-3xl font-extrabold text-blue-600 dark:text-blue-400">
+            {{ total_teachers }}
+          </p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Active in school
+          </p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20
+                    flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-chalkboard text-xl text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+    </div>
+ 
+    {# Teachers Present Today #}
+    <div class="p-5 rounded-2xl bg-white border border-gray-100
+                dark:bg-gray-900 dark:border-gray-800 shadow-soft
+                hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Present Today
+          </p>
+          <p class="mt-2 text-3xl font-extrabold text-green-600 dark:text-green-400">
+            {{ teacher_today_present }}
+          </p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            of {{ teacher_today_total }} teachers
+          </p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/20
+                    flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-circle-check text-xl text-green-600 dark:text-green-400"></i>
+        </div>
+      </div>
+    </div>
+ 
+    {# Teachers Absent Today #}
+    <div class="p-5 rounded-2xl bg-white border border-gray-100
+                dark:bg-gray-900 dark:border-gray-800 shadow-soft
+                hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Absent Today
+          </p>
+          <p class="mt-2 text-3xl font-extrabold text-red-600 dark:text-red-400">
+            {{ teacher_today_absent }}
+          </p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            of {{ teacher_today_total }} teachers
+          </p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-900/20
+                    flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-circle-xmark text-xl text-red-600 dark:text-red-400"></i>
+        </div>
+      </div>
+    </div>
+ 
+    {# Teacher Attendance Rate #}
+    <div class="p-5 rounded-2xl bg-white border border-gray-100
+                dark:bg-gray-900 dark:border-gray-800 shadow-soft
+                hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Attendance Rate
+          </p>
+          <p class="mt-2 text-3xl font-extrabold
+                    {% if teacher_today_percentage >= 85 %}text-green-600 dark:text-green-400
+                    {% elif teacher_today_percentage >= 60 %}text-yellow-600 dark:text-yellow-400
+                    {% else %}text-red-600 dark:text-red-400{% endif %}">
+            {{ teacher_today_percentage }}%
+          </p>
+          {% if teacher_today_not_marked > 0 %}
+            <p class="mt-1 text-xs font-medium text-amber-500 dark:text-amber-400">
+              {{ teacher_today_not_marked }} not yet marked
+            </p>
+          {% else %}
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              All teachers marked
+            </p>
+          {% endif %}
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/20
+                    flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-chart-pie text-xl text-purple-600 dark:text-purple-400"></i>
+        </div>
+      </div>
+      <div class="mt-4">
+        <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
+          <div class="h-1.5 rounded-full
+                      {% if teacher_today_percentage >= 85 %}bg-green-500
+                      {% elif teacher_today_percentage >= 60 %}bg-yellow-500
+                      {% else %}bg-red-500{% endif %}"
+               style="width: {{ teacher_today_percentage }}%">
+          </div>
+        </div>
+      </div>
+    </div>
+ 
+  </div>
   {# ============================================================ #}
   {# PENDING BREAKDOWN — unchanged from before                    #}
   {# ============================================================ #}
@@ -189,7 +332,12 @@
               dark:bg-gray-900 dark:border-gray-800 shadow-soft
               hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       <p class="text-xs text-gray-500">Teacher Attendance (today)</p>
-      <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">—</p>
+      <p class="text-3xl font-extrabold mt-1 group-hover:text-brand-600">
+        {{ teacher_today_percentage }}%
+      </p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">
+        {{ teacher_today_present }} present / {{ teacher_today_absent }} absent
+      </p>
     </a>
     <a href="#pending-requests"
        class="group p-5 rounded-2xl bg-white border border-gray-100
@@ -229,7 +377,7 @@
         </div>
       </a>
 
-      <a href="#" class="group p-5 rounded-2xl bg-purple-600 border border-purple-700
+      <a href="{% url 'mark_teacher_attendance' %}" class="group p-5 rounded-2xl bg-purple-600 border border-purple-700
                          dark:bg-gray-900 dark:border-gray-800 shadow-soft
                          hover:shadow-xl hover:-translate-y-1 transition-all duration-300
                          relative overflow-hidden">
@@ -267,7 +415,7 @@
         <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div class="flex items-center gap-3 relative z-10">
           <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-white text-purple-600 shadow-md">
-            <i class="fa-solid fa-user-plus text-xl"></i>
+            <i class="fa-solid fa-graduation-cap"></i>
           </span>
           <div>
             <p class="font-bold text-white">Enroll student</p>
@@ -279,15 +427,21 @@
   </section>
 
   {# ============================================================ #}
-  {# UPDATED — CHARTS WITH REAL DATA                             #}
+  {# CHARTS                                                       #}
+  {# Student chart — unchanged.                                   #}
+  {# Teacher chart — legend row added to match student chart.     #}
+  {#   Canvas ID "teacherAttendanceChart" and json_script IDs     #}
+  {#   "teacher-labels/present/absent" are untouched — the JS     #}
+  {#   in admin_dashboard.js already reads them correctly.        #}
   {# ============================================================ #}
-  <div class="mt-6">
-  <div class="p-6 rounded-3xl bg-white border border-gray-100
-              dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
 
+  {# --- STUDENT CHART --- #}
+  <div class="p-6 rounded-3xl bg-white border border-gray-100 
+              dark:bg-gray-900 dark:border-gray-800 shadow-soft">
     <div class="flex items-center justify-between mb-1">
       <p class="font-semibold text-gray-900 dark:text-white">
-        Attendance — Last 7 Days
+        Students Attendance — Last 7 Days
       </p>
       <div class="flex gap-3 text-xs">
         <span class="flex items-center gap-1 text-green-600 dark:text-green-400">
@@ -306,24 +460,39 @@
     <div class="h-64">
       <canvas id="attendanceChart"></canvas>
     </div>
-
   </div>
-</div>
-<!-- Teacher chart -->
-<div class="mt-6">
-  <div class="p-6 rounded-3xl bg-white border border-gray-100
-              dark:bg-gray-900 dark:border-gray-800 shadow-soft">
 
-    <p class="font-semibold text-gray-900 dark:text-white mb-4">
-      Teacher Attendance — Last 7 Days
-    </p>
-
-    <div class="h-64">
-      <canvas id="teacherAttendanceChart"></canvas>
+  {# --- TEACHER CHART --- #}
+    <div class="p-6 rounded-3xl bg-white border border-gray-100
+                dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+      <div class="flex items-center justify-between mb-1">
+        <p class="font-semibold text-gray-900 dark:text-white">
+          Teacher Attendance — Last 7 Days
+        </p>
+        {# Legend added — matches student chart above #}
+        <div class="flex gap-3 text-xs">
+          <span class="flex items-center gap-1 text-green-600 dark:text-green-400">
+            <span class="w-2 h-2 bg-green-500 rounded-full"></span> Present
+          </span>
+          <span class="flex items-center gap-1 text-red-600 dark:text-red-400">
+            <span class="w-2 h-2 bg-red-500 rounded-full"></span> Absent
+          </span>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+        Today: {{ teacher_today_present }} present / {{ teacher_today_absent }} absent
+        {% if teacher_today_not_marked > 0 %}
+          <span class="text-amber-500 font-medium">
+            · {{ teacher_today_not_marked }} not yet marked
+          </span>
+        {% endif %}
+      </p>
+      <div class="h-64">
+        <canvas id="teacherAttendanceChart"></canvas>
+      </div>
     </div>
-
+ 
   </div>
-</div>
 
   {# ============================================================ #}
   {# UPDATED — PENDING REGISTRATION TABLE (improved design)       #}

@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block title %}Teacher Attendance • Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+  {# ── Header ── #}
+  <div class="mb-6">
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+          Teacher Attendance
+        </h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Admin — Mark daily presence for all active teachers
+        </p>
+      </div>
+      <a href="{% url 'admin_dashboard' %}"
+         class="text-sm px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                text-gray-700 dark:text-gray-300
+                hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+        ← Dashboard
+      </a>
+    </div>
+  </div>
+
+  {# ── Status banner ── #}
+  {% if is_edit_mode %}
+    <div class="flex items-center gap-2 px-4 py-3 mb-5 rounded-xl
+                bg-yellow-50 border border-yellow-200
+                dark:bg-yellow-900/20 dark:border-yellow-800 text-sm">
+      <svg class="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0"
+           fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd"
+              d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673
+                 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485
+                 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0
+                 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+              clip-rule="evenodd"/>
+      </svg>
+      <span class="text-yellow-800 dark:text-yellow-300 font-medium">
+        Editing existing attendance for this date — submitting will overwrite current records.
+      </span>
+    </div>
+  {% else %}
+    <div class="flex items-center gap-2 px-4 py-3 mb-5 rounded-xl
+                bg-blue-50 border border-blue-200
+                dark:bg-blue-900/20 dark:border-blue-800 text-sm">
+      <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0"
+           fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0
+                 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459
+                 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25
+                 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
+              clip-rule="evenodd"/>
+      </svg>
+      <span class="text-blue-800 dark:text-blue-300 font-medium">
+        New attendance entry for this date.
+      </span>
+    </div>
+  {% endif %}
+
+  {# ── Django messages ── #}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="flex items-center gap-2 px-4 py-3 mb-4 rounded-xl text-sm font-medium
+                  {% if message.tags == 'success' %}
+                    bg-green-50 border border-green-200 text-green-800
+                    dark:bg-green-900/20 dark:border-green-800 dark:text-green-300
+                  {% elif message.tags == 'warning' %}
+                    bg-yellow-50 border border-yellow-200 text-yellow-800
+                    dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-300
+                  {% else %}
+                    bg-red-50 border border-red-200 text-red-800
+                    dark:bg-red-900/20 dark:border-red-800 dark:text-red-300
+                  {% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {# ── Form ── #}
+  <form method="POST"
+        class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+               rounded-2xl shadow-sm overflow-hidden">
+    {% csrf_token %}
+
+    {# Date picker in the card header #}
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800
+                flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <label for="date"
+               class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+          Attendance date
+        </label>
+        <input type="date"
+               id="date"
+               name="date"
+               value="{{ selected_date }}"
+               class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700
+                      bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                      text-sm focus:outline-none focus:ring-2 focus:ring-brand-600
+                      transition-colors" />
+      </div>
+
+      <button type="submit"
+              class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700
+                     text-white text-sm font-semibold transition-colors shadow-sm">
+        {% if is_edit_mode %}
+          Update Attendance
+        {% else %}
+          Save Attendance
+        {% endif %}
+      </button>
+    </div>
+
+    {# Teacher table #}
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50 dark:bg-gray-800/60 text-left
+                     text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th class="px-6 py-3">#</th>
+            <th class="px-6 py-3">Teacher</th>
+            <th class="px-6 py-3">Email</th>
+            <th class="px-6 py-3 text-center">Present</th>
+            <th class="px-6 py-3 text-center">Absent</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+          {% for teacher in teachers %}
+            {% with attendance_dict|get_item:teacher.id as record %}
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
+
+              <td class="px-6 py-4 text-gray-500 dark:text-gray-400">
+                {{ forloop.counter }}
+              </td>
+
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <img src="{% if teacher.profile_image %}{{ teacher.profile_image.url }}{% else %}https://ui-avatars.com/api/?name={{ teacher.username }}&size=32{% endif %}"
+                       alt="{{ teacher.username }}"
+                       class="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-700 flex-shrink-0" />
+                  <div>
+                    <p class="font-medium text-gray-900 dark:text-white">
+                      {{ teacher.get_full_name|default:teacher.username }}
+                    </p>
+                    {% if teacher.get_full_name %}
+                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                        @{{ teacher.username }}
+                      </p>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+
+              <td class="px-6 py-4 text-gray-600 dark:text-gray-400">
+                {{ teacher.email }}
+              </td>
+
+              {# Present radio #}
+              <td class="px-6 py-4 text-center">
+                <label class="inline-flex items-center justify-center gap-2
+                              cursor-pointer text-gray-700 dark:text-gray-300">
+                  <input type="radio"
+                         name="teacher_{{ teacher.id }}"
+                         value="present"
+                         class="accent-green-600"
+                         {% if record and record.status == 'present' %}checked
+                         {% elif not record %}checked{% endif %}
+                         required />
+                  <span class="text-sm font-medium text-green-700 dark:text-green-400">
+                    Present
+                  </span>
+                </label>
+              </td>
+
+              {# Absent radio #}
+              <td class="px-6 py-4 text-center">
+                <label class="inline-flex items-center justify-center gap-2
+                              cursor-pointer text-gray-700 dark:text-gray-300">
+                  <input type="radio"
+                         name="teacher_{{ teacher.id }}"
+                         value="absent"
+                         class="accent-red-600"
+                         {% if record and record.status == 'absent' %}checked{% endif %} />
+                  <span class="text-sm font-medium text-red-700 dark:text-red-400">
+                    Absent
+                  </span>
+                </label>
+              </td>
+
+            </tr>
+            {% endwith %}
+          {% empty %}
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                No active teachers found.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {# Sticky bottom save bar — visible on long lists #}
+    <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800
+                flex items-center justify-between gap-4">
+      <p class="text-xs text-gray-500 dark:text-gray-400">
+        {{ teachers.count }} teacher{{ teachers.count|pluralize }} listed
+      </p>
+      <button type="submit"
+              class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700
+                     text-white text-sm font-semibold transition-colors shadow-sm">
+        {% if is_edit_mode %}
+          Update Attendance
+        {% else %}
+          Save Attendance
+        {% endif %}
+      </button>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}

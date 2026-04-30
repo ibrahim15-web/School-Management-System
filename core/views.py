@@ -12,7 +12,7 @@ from django.conf import settings
 from django.contrib import messages
 # Local import
 from accounts.models import CustomUser
-from teachers.analytics import get_last_7_days_attendance, get_today_attendance_summary, get_last_7_days_teacher_attendance
+from teachers.analytics import get_last_7_days_attendance, get_today_attendance_summary, get_last_7_days_teacher_attendance, get_today_teacher_attendance_summary
 from teachers.models import Attendance
 
 
@@ -60,34 +60,42 @@ def admin_dashboard(request):
             user['role'] = 'teacher'
         else:
             user['role'] = 'student'  # safe default
-    # --- Attendance chart data (last 7 days) ---
-    attendance_chart = get_last_7_days_attendance()
-    # --- Teacher Attendance chart data (last 7 days) ---
-    teacher_attendance_chart = get_last_7_days_teacher_attendance()
+    
+    # --- Analytics ---
 
-    # --- Today's summary ---
-    today_summary = get_today_attendance_summary()
+    student_chart   = get_last_7_days_attendance()
+    teacher_chart   = get_last_7_days_teacher_attendance()
+    student_today   = get_today_attendance_summary()
+    teacher_today   = get_today_teacher_attendance_summary()
 
     context = { 
         # Pending registrations
         "pending_count": pending_users_queryset.count(),
         "pending_students": pending_users_queryset.filter(is_student=True).count(),
         "pending_teachers": pending_users_queryset.filter(is_teacher=True).count(),
-        # Totals
+        # School totals
         "total_students": CustomUser.objects.filter(is_student=True, is_member_of_this_school=True).count(),
         "total_teachers": CustomUser.objects.filter(is_teacher=True, is_member_of_this_school=True).count(),
-        # AFTER — pass raw Python lists, json_script handles the rest:
-        'attendance_chart_labels':  attendance_chart['labels'],
-        'attendance_chart_present': attendance_chart['present'],
-        'attendance_chart_absent':  attendance_chart['absent'],
-        'teacher_chart_labels': teacher_attendance_chart['labels'],
-        'teacher_chart_present': teacher_attendance_chart['present'],
-        'teacher_chart_absent': teacher_attendance_chart['absent'],
-        # Today's summary
-        'today_present': today_summary['present'],
-        'today_absent': today_summary['absent'],
-        'today_total': today_summary['total'],
-        'today_percentage': today_summary['percentage'],
+        # Student chart (last 7 days)
+        'attendance_chart_labels':  student_chart['labels'],
+        'attendance_chart_present': student_chart['present'],
+        'attendance_chart_absent':  student_chart['absent'],
+        # Teacher chart (last 7 days)
+        'teacher_chart_labels': teacher_chart['labels'],
+        'teacher_chart_present': teacher_chart['present'],
+        'teacher_chart_absent': teacher_chart['absent'],
+        # Student today summary
+        'today_present': student_today['present'],
+        'today_absent': student_today['absent'],
+        'today_total': student_today['total'],
+        'today_percentage': student_today['percentage'],
+        # Teacher today summary
+        'teacher_today_present': teacher_today['present'],
+        'teacher_today_absent': teacher_today['absent'],
+        'teacher_today_recorded':   teacher_today['total_recorded'],
+        'teacher_today_total': teacher_today['total_teachers'],
+        'teacher_today_not_marked': teacher_today['not_marked'],
+        'teacher_today_percentage': teacher_today['percentage'],
         # Pending users for JS table
         "pending_users_json": pending_users_list,
     }

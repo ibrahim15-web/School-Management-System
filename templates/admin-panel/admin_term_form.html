@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Term{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+  <a href="{% url 'admin_terms' %}"
+     class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mb-4 inline-block">
+    ← Back to terms
+  </a>
+
+  <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+              rounded-2xl shadow-sm p-6">
+
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-6">
+      {{ action }} term
+    </h1>
+
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Academic year
+        </label>
+        <select name="academic_year_id" required id="year-select"
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                       bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-600">
+          <option value="" disabled {% if not term %}selected{% endif %}>
+            Choose an academic year...
+          </option>
+          {% for year in years %}
+            <option value="{{ year.id }}"
+                    data-start="{{ year.start_date|date:'Y-m-d' }}"
+                    data-end="{{ year.end_date|date:'Y-m-d' }}"
+                    {% if term.academic_year_id == year.id %}selected{% endif %}>
+              {{ year.name }}
+              {% if year.is_current %}(current){% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Term name
+        </label>
+        <input type="text" name="name" required
+               value="{{ term.name|default:'' }}"
+               placeholder="e.g. Fall Term, Spring Semester, Term 1"
+               class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                      bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                      focus:outline-none focus:ring-2 focus:ring-brand-600">
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Start date
+          </label>
+          <input type="date" name="start_date" required id="start-date"
+                 value="{{ term.start_date|date:'Y-m-d'|default:'' }}"
+                 class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                        bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                        focus:outline-none focus:ring-2 focus:ring-brand-600">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            End date
+          </label>
+          <input type="date" name="end_date" required id="end-date"
+                 value="{{ term.end_date|date:'Y-m-d'|default:'' }}"
+                 class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                        bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                        focus:outline-none focus:ring-2 focus:ring-brand-600">
+        </div>
+      </div>
+
+      <!-- Hint showing the allowed range based on selected year -->
+      <p id="date-hint" class="text-xs text-gray-500 dark:text-gray-400 -mt-2 hidden">
+        Dates must be within: <span id="year-range"></span>
+      </p>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit"
+                class="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700
+                       text-white text-sm font-semibold transition-colors">
+          {{ action }} term
+        </button>
+        <a href="{% url 'admin_terms' %}"
+           class="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700
+                  text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+                  text-sm font-medium text-center transition-colors">
+          Cancel
+        </a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  const yearSelect = document.getElementById('year-select');
+  const startDate = document.getElementById('start-date');
+  const endDate = document.getElementById('end-date');
+  const hint = document.getElementById('date-hint');
+  const yearRange = document.getElementById('year-range');
+
+  function updateDateBounds() {
+    const selected = yearSelect.options[yearSelect.selectedIndex];
+    const start = selected.dataset.start;
+    const end = selected.dataset.end;
+
+    if (start && end) {
+      startDate.min = start;
+      startDate.max = end;
+      endDate.min = start;
+      endDate.max = end;
+      yearRange.textContent = `${start} — ${end}`;
+      hint.classList.remove('hidden');
+    }
+  }
+
+  yearSelect.addEventListener('change', updateDateBounds);
+
+  // Run on load in edit mode so bounds are set immediately
+  if (yearSelect.value) updateDateBounds();
+</script>
+{% endblock %}

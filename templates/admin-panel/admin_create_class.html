@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Create Class{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+  <a href="{% url 'admin_classes' %}"
+     class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mb-4 inline-block">
+    ← Back to classes
+  </a>
+
+  <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+              rounded-2xl shadow-sm p-6">
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Create new class</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">{{ current_year.name }}</p>
+
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Class name
+        </label>
+        <input type="text" name="name" required placeholder="e.g. Grade 10-A"
+               class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                      bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                      focus:outline-none focus:ring-2 focus:ring-brand-600">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Capacity
+        </label>
+        <input type="number" name="capacity" value="30" min="1" max="100"
+               class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                      bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                      focus:outline-none focus:ring-2 focus:ring-brand-600">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Subjects (select multiple)
+        </label>
+        <div class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-3 border
+                    border-gray-200 dark:border-gray-700 rounded-xl">
+          {% for sub in subjects %}
+          <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300
+                        cursor-pointer">
+            <input type="checkbox" name="subjects" value="{{ sub.id }}"
+                   class="rounded border-gray-300 dark:border-gray-600
+                          text-brand-600 focus:ring-brand-500">
+            {{ sub.name }}
+          </label>
+          {% endfor %}
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          You can add or change subjects later from the class detail page.
+        </p>
+      </div>
+
+      <button type="submit"
+              class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700
+                     text-white text-sm font-semibold transition-colors">
+        Create class
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

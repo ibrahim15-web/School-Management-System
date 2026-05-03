@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Academic Year{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+  <a href="{% url 'admin_academic_years' %}"
+     class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mb-4 inline-block">
+    ← Back to academic years
+  </a>
+
+  <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+              rounded-2xl shadow-sm p-6">
+
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-6">
+      {{ action }} academic year
+    </h1>
+
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Year name
+        </label>
+        <input type="text" name="name" required
+               value="{{ year.name|default:'' }}"
+               placeholder="e.g. 2025-2026"
+               class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                      bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                      focus:outline-none focus:ring-2 focus:ring-brand-600">
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Start date
+          </label>
+          <input type="date" name="start_date" required
+                 value="{{ year.start_date|date:'Y-m-d'|default:'' }}"
+                 class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                        bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                        focus:outline-none focus:ring-2 focus:ring-brand-600">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            End date
+          </label>
+          <input type="date" name="end_date" required
+                 value="{{ year.end_date|date:'Y-m-d'|default:'' }}"
+                 class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                        bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                        focus:outline-none focus:ring-2 focus:ring-brand-600">
+        </div>
+      </div>
+
+      <div>
+        <label class="flex items-center gap-3 cursor-pointer select-none">
+          <input type="checkbox" name="is_current"
+                 {% if year.is_current %}checked{% endif %}
+                 class="w-4 h-4 rounded border-gray-300 dark:border-gray-600
+                        text-brand-600 focus:ring-brand-500">
+          <div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Set as current academic year
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              This will automatically unset any other year marked as current.
+            </p>
+          </div>
+        </label>
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit"
+                class="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700
+                       text-white text-sm font-semibold transition-colors">
+          {{ action }} academic year
+        </button>
+        <a href="{% url 'admin_academic_years' %}"
+           class="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700
+                  text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+                  text-sm font-medium text-center transition-colors">
+          Cancel
+        </a>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}

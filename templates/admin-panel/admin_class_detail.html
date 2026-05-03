@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% block title %}{{ class_obj.name }} — Class Detail{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+  <a href="{% url 'admin_classes' %}"
+     class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mb-4 inline-block">
+    ← Back to classes
+  </a>
+
+  <!-- Header -->
+  <div class="flex items-start justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ class_obj.name }}</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        {% if current_year %}{{ current_year.name }}{% endif %}
+        &nbsp;·&nbsp;
+        {{ class_obj.current_enrollment }}/{{ class_obj.capacity }} students enrolled
+      </p>
+    </div>
+    {% if class_obj.is_full %}
+      <span class="px-3 py-1 text-xs rounded-full bg-red-100 dark:bg-red-900/30
+                   text-red-700 dark:text-red-300 font-medium">Full</span>
+    {% else %}
+      <span class="px-3 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/30
+                   text-green-700 dark:text-green-300 font-medium">Open</span>
+    {% endif %}
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6">
+
+    <!-- LEFT COLUMN -->
+    <div class="space-y-6">
+
+      <!-- Enrolled Students -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+                  rounded-2xl shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+          <p class="font-semibold text-gray-900 dark:text-white">
+            Enrolled students
+            <span class="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+              ({{ enrolled_students|length }})
+            </span>
+          </p>
+        </div>
+
+        {% if enrolled_students %}
+        <ul class="divide-y divide-gray-100 dark:divide-gray-800">
+          {% for student in enrolled_students %}
+          <li class="px-5 py-3 flex items-center gap-3">
+            <img src="{% if student.profile_image %}{{ student.profile_image.url }}{% else %}https://ui-avatars.com/api/?name={{ student.username }}&size=32{% endif %}"
+                 alt="{{ student.username }}"
+                 class="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-700">
+            <div>
+              <p class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ student.get_full_name|default:student.username }}
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ student.email }}</p>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+          No students enrolled yet.
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Teachers assigned to this class -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+                  rounded-2xl shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+          <p class="font-semibold text-gray-900 dark:text-white">Teachers assigned</p>
+        </div>
+
+        {% if teachers %}
+        <ul class="divide-y divide-gray-100 dark:divide-gray-800">
+          {% for ta in teachers %}
+          <li class="px-5 py-3 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ ta.teacher.get_full_name|default:ta.teacher.username }}
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ ta.subject.name }}</p>
+            </div>
+            <span class="px-2 py-0.5 text-xs rounded-full bg-purple-100 dark:bg-purple-900/30
+                         text-purple-700 dark:text-purple-300">
+              {{ ta.subject.name }}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+          No teachers assigned yet.
+          <a href="{% url 'admin_teachers' %}" class="block mt-2 text-brand-600 hover:underline">
+            Go to teacher management →
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="space-y-6">
+
+      <!-- Manage subjects -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+                  rounded-2xl shadow-sm p-5">
+        <p class="font-semibold text-gray-900 dark:text-white mb-1">Subjects in this class</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+          Subjects must be assigned here before teachers can be linked to them.
+        </p>
+
+        <form method="post" class="space-y-4">
+          {% csrf_token %}
+
+          <div class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto p-3 border
+                      border-gray-200 dark:border-gray-700 rounded-xl">
+            {% for sub in subjects %}
+            <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300
+                          cursor-pointer">
+              <input type="checkbox" name="subjects" value="{{ sub.id }}"
+                     {% if sub in class_obj.subjects.all %}checked{% endif %}
+                     class="rounded border-gray-300 dark:border-gray-600
+                            text-brand-600 focus:ring-brand-500">
+              {{ sub.name }}
+            </label>
+            {% empty %}
+            <p class="col-span-2 text-xs text-gray-500 dark:text-gray-400">
+              No subjects in the system yet. Create them via Django admin or add a subject
+              management page.
+            </p>
+            {% endfor %}
+          </div>
+
+          <button type="submit"
+                  class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700
+                         text-white text-sm font-semibold transition-colors">
+            Save subjects
+          </button>
+        </form>
+      </div>
+
+      <!-- Class info summary -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+                  rounded-2xl shadow-sm p-5">
+        <p class="font-semibold text-gray-900 dark:text-white mb-3">Class info</p>
+        <dl class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <dt class="text-gray-500 dark:text-gray-400">Academic year</dt>
+            <dd class="text-gray-900 dark:text-white font-medium">
+              {{ class_obj.academic_year.name }}
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-gray-500 dark:text-gray-400">Capacity</dt>
+            <dd class="text-gray-900 dark:text-white font-medium">{{ class_obj.capacity }}</dd>
+          </div>
+          <!-- Update capacity -->
+          <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+                      rounded-2xl shadow-sm p-5">
+            <p class="font-semibold text-gray-900 dark:text-white mb-1">Update capacity</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+              Cannot be set below current enrollment ({{ class_obj.current_enrollment }} students).
+            </p>
+
+            <form method="post" action="{% url 'admin_update_class_capacity' class_obj.id %}"
+                  class="flex gap-3">
+              {% csrf_token %}
+              <input type="number" name="capacity"
+                    value="{{ class_obj.capacity }}" min="{{ class_obj.current_enrollment }}" max="200"
+                    class="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                            focus:outline-none focus:ring-2 focus:ring-brand-600">
+              <button type="submit"
+                      class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700
+                            text-white text-sm font-semibold transition-colors flex-shrink-0">
+                Save
+              </button>
+            </form>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-gray-500 dark:text-gray-400">Enrolled</dt>
+            <dd class="text-gray-900 dark:text-white font-medium">{{ class_obj.current_enrollment }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-gray-500 dark:text-gray-400">Department</dt>
+            <dd class="text-gray-900 dark:text-white font-medium">
+              {{ class_obj.department.name|default:"—" }}
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-gray-500 dark:text-gray-400">Subjects</dt>
+            <dd class="text-gray-900 dark:text-white font-medium">
+              {{ class_obj.subjects.count }}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+    </div>
+  </div>
+    <!-- Danger zone -->
+    <div class="mt-8 p-5 bg-white dark:bg-gray-900 border border-red-200 dark:border-red-900/50
+                rounded-2xl">
+    <p class="font-semibold text-red-700 dark:text-red-400 mb-1">Delete this class</p>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        This will also remove all enrollments and teaching assignments linked to it.
+        This action cannot be undone.
+    </p>
+    <form method="post" action="{% url 'admin_delete_class' class_obj.id %}"
+            onsubmit="return confirm('Delete {{ class_obj.name }}? This cannot be undone.')">
+        {% csrf_token %}
+        <button type="submit"
+                class="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700
+                    text-white text-sm font-semibold transition-colors">
+        Delete class
+        </button>
+    </form>
+    </div>
+</div>
+{% endblock %}

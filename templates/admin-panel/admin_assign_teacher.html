@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Assign — {{ teacher.username }}{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+
+  <a href="{% url 'admin_teachers' %}"
+     class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mb-4 inline-block">
+    ← Back to teachers
+  </a>
+
+  <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+    {{ teacher.get_full_name|default:teacher.username }}
+  </h1>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">{{ current_year.name }}</p>
+
+  {% if current_assignments %}
+  <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+              rounded-2xl shadow-sm p-5 mb-6">
+    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Current assignments</p>
+    <div class="space-y-2">
+      {% for a in current_assignments %}
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-900 dark:text-white">
+          {{ a.subject.name }} — {{ a.class_assigned.name }}
+        </span>
+        <form method="post"
+              action="{% url 'admin_remove_teacher_assignment' teacher.id a.id %}">
+          {% csrf_token %}
+          <button type="submit"
+                  class="text-xs text-red-600 dark:text-red-400 hover:underline">
+            Remove
+          </button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+              rounded-2xl shadow-sm p-6">
+    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Add new assignment</p>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Class</label>
+        <select name="class_id" required
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                       bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-600">
+          <option value="" disabled selected>Choose a class...</option>
+          {% for cls in classes %}
+            <option value="{{ cls.id }}">{{ cls.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject</label>
+        <select name="subject_id" required
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                       bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-600">
+          <option value="" disabled selected>Choose a subject...</option>
+          {% for sub in subjects %}
+            <option value="{{ sub.id }}">{{ sub.name }}</option>
+          {% endfor %}
+        </select>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          The subject must already be added to the class under Class Management.
+        </p>
+      </div>
+
+      <button type="submit"
+              class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700
+                     text-white text-sm font-semibold transition-colors">
+        Add assignment
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

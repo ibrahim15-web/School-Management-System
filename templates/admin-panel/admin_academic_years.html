@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Academic Years{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Academic Years</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Manage school cycles and set which year is currently active.
+      </p>
+    </div>
+    <div class="flex gap-3">
+      <a href="{% url 'admin_create_academic_year' %}"
+         class="text-sm px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700
+                text-white transition-colors">
+        + New year
+      </a>
+      <a href="{% url 'admin_dashboard' %}"
+         class="text-sm px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+        ← Dashboard
+      </a>
+    </div>
+  </div>
+
+  <div class="space-y-4">
+    {% for year in years %}
+    <div class="bg-white dark:bg-gray-900 border
+                {% if year.is_current %}border-brand-300 dark:border-brand-700{% else %}border-gray-100 dark:border-gray-800{% endif %}
+                rounded-2xl shadow-sm p-5">
+
+      <div class="flex items-start justify-between gap-4">
+
+        <div class="flex items-center gap-3">
+          {% if year.is_current %}
+            <span class="w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0 mt-1"></span>
+          {% else %}
+            <span class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-700 flex-shrink-0 mt-1"></span>
+          {% endif %}
+          <div>
+            <div class="flex items-center gap-2">
+              <p class="font-semibold text-gray-900 dark:text-white">{{ year.name }}</p>
+              {% if year.is_current %}
+                <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 dark:bg-green-900/30
+                             text-green-700 dark:text-green-300 font-medium">
+                  Current
+                </span>
+              {% endif %}
+            </div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              {{ year.start_date|date:"M d, Y" }} — {{ year.end_date|date:"M d, Y" }}
+            </p>
+            <div class="flex gap-4 mt-2">
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                {{ year.class_count }} class{{ year.class_count|pluralize:"es" }}
+              </span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                {{ year.enrollment_count }} enrollment{{ year.enrollment_count|pluralize }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-shrink-0">
+          {% if not year.is_current %}
+            <form method="post" action="{% url 'admin_set_current_year' year.id %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="px-3 py-1.5 text-xs rounded-lg border border-brand-300 dark:border-brand-700
+                             text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20
+                             transition-colors font-medium">
+                Set as current
+              </button>
+            </form>
+          {% endif %}
+
+          <a href="{% url 'admin_edit_academic_year' year.id %}"
+             class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700
+                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800
+                    transition-colors">
+            Edit
+          </a>
+
+          {% if not year.is_current %}
+            <form method="post" action="{% url 'admin_delete_academic_year' year.id %}"
+                  onsubmit="return confirm('Delete {{ year.name }}? This will also delete all classes and enrollments linked to it.')">
+              {% csrf_token %}
+              <button type="submit"
+                      class="px-3 py-1.5 text-xs rounded-lg border border-red-200 dark:border-red-800
+                             text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20
+                             transition-colors">
+                Delete
+              </button>
+            </form>
+          {% else %}
+            <span class="px-3 py-1.5 text-xs text-gray-400 dark:text-gray-600 cursor-not-allowed">
+              Delete
+            </span>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-16 bg-white dark:bg-gray-900 border border-gray-100
+                dark:border-gray-800 rounded-2xl">
+      <p class="text-gray-500 dark:text-gray-400 mb-3">No academic years yet.</p>
+      <a href="{% url 'admin_create_academic_year' %}"
+         class="text-sm px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700
+                text-white transition-colors">
+        Create the first one
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

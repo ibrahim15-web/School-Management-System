@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Assign Class — {{ student.username }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+  <a href="{% url 'admin_students' %}"
+     class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mb-4 inline-block">
+    ← Back to students
+  </a>
+
+  <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+              rounded-2xl shadow-sm p-6">
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+      Assign class to {{ student.get_full_name|default:student.username }}
+    </h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">{{ current_year.name }}</p>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Select class
+        </label>
+        <select name="class_id" required
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                       bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-600">
+          <option value="" disabled selected>Choose a class...</option>
+          {% for cls in available_classes %}
+            <option value="{{ cls.id }}">
+              {{ cls.name }} ({{ cls.current_enrollment }}/{{ cls.capacity }} enrolled)
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit"
+              class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700
+                     text-white text-sm font-semibold transition-colors">
+        Assign
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

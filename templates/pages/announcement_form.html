@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Announcement{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+  <a href="{% url 'announcement_list' %}"
+     class="text-sm text-gray-500 hover:text-gray-700
+            dark:hover:text-gray-300 mb-4 inline-block">
+    ← Back to announcements
+  </a>
+
+  <div class="bg-white dark:bg-gray-900 border border-gray-100
+              dark:border-gray-800 rounded-2xl shadow-sm p-6">
+
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-6">
+      {{ action }} announcement
+    </h1>
+
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm font-medium
+                      text-gray-700 dark:text-gray-300 mb-1">
+          Title
+        </label>
+        <input type="text" name="title" required
+               placeholder="e.g. Parent-Teacher Meeting — Term 2"
+               class="w-full px-4 py-2 rounded-xl border border-gray-200
+                      dark:border-gray-700 bg-white dark:bg-gray-800
+                      text-gray-900 dark:text-white text-sm
+                      focus:outline-none focus:ring-2 focus:ring-brand-600">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium
+                      text-gray-700 dark:text-gray-300 mb-1">
+          Body
+        </label>
+        <textarea name="body" required rows="5"
+                  placeholder="Write the full announcement here..."
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200
+                         dark:border-gray-700 bg-white dark:bg-gray-800
+                         text-gray-900 dark:text-white text-sm
+                         focus:outline-none focus:ring-2 focus:ring-brand-600
+                         resize-none"></textarea>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium
+                      text-gray-700 dark:text-gray-300 mb-1">
+          Audience
+        </label>
+        <select name="target" required
+                class="w-full px-4 py-2 rounded-xl border border-gray-200
+                       dark:border-gray-700 bg-white dark:bg-gray-800
+                       text-gray-900 dark:text-white text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-600">
+          {% for value, label in targets %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Controls who sees this announcement on their dashboard.
+        </p>
+      </div>
+
+      <div>
+        <label class="flex items-center gap-3 cursor-pointer select-none">
+          <input type="checkbox" name="is_pinned"
+                 class="w-4 h-4 rounded border-gray-300 dark:border-gray-600
+                        text-brand-600 focus:ring-brand-500">
+          <div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Pin this announcement
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              Pinned announcements appear at the top for everyone.
+            </p>
+          </div>
+        </label>
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit"
+                class="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700
+                       text-white text-sm font-semibold transition-colors">
+          Post announcement
+        </button>
+        <a href="{% url 'announcement_list' %}"
+           class="flex-1 py-2.5 rounded-xl border border-gray-200
+                  dark:border-gray-700 text-gray-700 dark:text-gray-300
+                  hover:bg-gray-100 dark:hover:bg-gray-800
+                  text-sm font-medium text-center transition-colors">
+          Cancel
+        </a>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}

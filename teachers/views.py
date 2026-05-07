@@ -2,10 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.timezone import now
+from django.db.models import Q
+
 from .models import *
 from academics.models import *
 from accounts.models import CustomUser
-from students.models import Enrollment
+from students.models import Enrollment, ParentStudent
+from core.models import Announcement, Notification
 
 
 @login_required(login_url='login')
@@ -63,6 +66,11 @@ def teacher_dashboard(request):
         )
     else:
         total_students = 0
+    announcements = Announcement.objects.filter(
+        Q(target='all') | Q(target='teachers')
+    ).order_by('-is_pinned', '-created_at')[:4]
+    recent_notifications = request.user.notifications.filter(
+    is_read=False)[:5]
     context = {
         'teacher': request.user,
         'current_year': current_year,
@@ -71,6 +79,8 @@ def teacher_dashboard(request):
         'total_subjects': total_subjects,
         'total_students': total_students,
         'total_assignments': total_assignments,
+        'announcements': announcements,
+        'recent_notifications': recent_notifications,
     } 
     return render(request, 'teachers/teacher_dashboard.html', context)
 @login_required(login_url='login')
@@ -183,6 +193,30 @@ def mark_attendance(request, assignment_id):
                     }
                 )
 
+                Notification.send(
+                    recipient=student,
+                    title="Attendance recorded",
+                    body=(
+                        f"Your attendance for "
+                        f"{assignment.class_assigned.name} on {date} "
+                        f"was marked as {status}."
+                    ),
+                    notif_type='attendance',
+                )
+                # Notify parents too
+                for link in ParentStudent.objects.filter(student=student).select_related('parent'):
+                    Notification.send(
+                        recipient=link.parent,
+                        title="Child attendance recorded",
+                        body=(
+                            f"{student.get_full_name() or student.username} "
+                            f"was marked {status} on {date} "
+                            f"in {assignment.class_assigned.name}."
+                        ),
+                        notif_type='attendance',
+                    )
+
+
             messages.success(request, "Attendance saved successfully!")
             return redirect('teacher_attendance')
 
@@ -276,8 +310,183 @@ def mark_teacher_attendance(request):
         'is_edit_mode': is_edit_mode,
     })
 
+@login_required(login_url='login')
 def teacher_grades(request):
-    return render(request, 'teachers/grades.html')
+    """List all assignments — teacher picks one to enter grades for."""
+    if not request.user.is_teacher:
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    try:
+        current_year = AcademicYear.objects.get(is_current=True)
+    except AcademicYear.DoesNotExist:
+        current_year = None
+    assignments = (
+        request.user.teaching_assignments
+        .filter(academic_year=current_year)
+        .select_related('subject', 'class_assigned')
+        .order_by('class_assigned__name', 'subject__name')
+    ) if current_year else []
+    return render(request, 'teachers/grades.html', {
+        'assignments': assignments,
+        'current_year': current_year,
+    })
 
+@login_required(login_url='login')
+def enter_grades(request, assignment_id):
+    """Enter or update grades for all students in one class/subject."""
+    if not request.user.is_teacher:
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+
+    assignment = get_object_or_404(
+        request.user.teaching_assignments.select_related(
+            'class_assigned', 'subject', 'academic_year'
+        ),
+        id=assignment_id,
+    )
+    students = CustomUser.objects.filter(
+        enrollments__class_assigned=assignment.class_assigned,
+        enrollments__academic_year=assignment.academic_year,
+        enrollments__status='active',
+    ).distinct().order_by('username')
+    terms = Term.objects.filter(
+        academic_year=assignment.academic_year
+    ).order_by('start_date')
+    # Selected exam type and term from GET/POST
+    exam_type    = request.POST.get('exam_type') or request.GET.get('exam_type', 'quiz')
+    selected_term_id = request.POST.get('term_id') or request.GET.get('term_id', '')
+    selected_term = None
+    if selected_term_id:
+        try:
+            selected_term = terms.get(id=selected_term_id)
+        except Term.DoesNotExist:
+            pass
+    # Load existing grades for this combo so we can pre-fill
+    existing_qs = Grade.objects.filter(
+        subject=assignment.subject,
+        class_assigned=assignment.class_assigned,
+        academic_year=assignment.academic_year,
+        exam_type=exam_type,
+        term=selected_term,
+    )
+    existing_map = {g.student_id: g for g in existing_qs}
+    if request.method == 'POST' and 'save_grades' in request.POST:
+        max_score = request.POST.get('max_score', '100')
+        try:
+            max_score = float(max_score)
+            if max_score <= 0:
+                raise ValueError
+        except ValueError:
+            messages.error(request, 'Max score must be a positive number.')
+            max_score = 100
+        saved = 0
+        for student in students:
+            raw = request.POST.get(f'score_{student.id}', '').strip()
+            if raw == '':
+                continue   # skip blank — don't overwrite existing
+            try:
+                score = float(raw)
+                if score < 0 or score > max_score:
+                    messages.warning(
+                        request,
+                        f'{student.username}: score {score} out of range, skipped.'
+                    )
+                    continue
+            except ValueError:
+                continue
+            Grade.objects.update_or_create(
+                student=student,
+                subject=assignment.subject,
+                class_assigned=assignment.class_assigned,
+                academic_year=assignment.academic_year,
+                exam_type=exam_type,
+                term=selected_term,
+                defaults={
+                    'score':     score,
+                    'max_score': max_score,
+                    'marked_by': request.user,
+                },
+            )
+            # Notify student
+            Notification.send(
+                recipient=student,
+                title="Grade recorded",
+                body=(
+                    f"Your "
+                    f"{dict(Grade.EXAM_TYPE_CHOICES).get(exam_type, exam_type)} "
+                    f"score for {assignment.subject.name} "
+                    f"has been recorded: {score}/{max_score}."
+                ),
+                notif_type='grade',
+            )
+
+            # Notify parents
+            for link in ParentStudent.objects.filter(
+                student=student
+            ).select_related('parent'):
+                Notification.send(
+                    recipient=link.parent,
+                    title="Child grade recorded",
+                    body=(
+                        f"{student.get_full_name() or student.username} "
+                        f"received {score}/{max_score} "
+                        f"in {assignment.subject.name} "
+                        f"({dict(Grade.EXAM_TYPE_CHOICES).get(exam_type, exam_type)})."
+                    ),
+                    notif_type='grade',
+                )
+            saved += 1
+        messages.success(request, f'Saved {saved} grade(s).')
+        return redirect(
+            f"{request.path}?exam_type={exam_type}"
+            + (f"&term_id={selected_term_id}" if selected_term_id else "")
+        )
+    EXAM_TYPES = Grade.EXAM_TYPE_CHOICES
+    return render(request, 'teachers/enter_grades.html', {
+        'assignment':      assignment,
+        'students':        students,
+        'terms':           terms,
+        'exam_types':      EXAM_TYPES,
+        'exam_type':       exam_type,
+        'selected_term':   selected_term,
+        'selected_term_id': selected_term_id,
+        'existing_map':    existing_map,
+    })
+
+@login_required(login_url='login')
 def teacher_schedule(request):
-    return render(request, 'teachers/schedule.html')
+    if not request.user.is_teacher:
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+
+    from academics.models import TimetableSlot
+
+    try:
+        current_year = AcademicYear.objects.get(is_current=True)
+    except AcademicYear.DoesNotExist:
+        current_year = None
+
+    slots = []
+    if current_year:
+        slots = (
+            TimetableSlot.objects
+            .filter(
+                teacher=request.user,
+                academic_year=current_year,
+            )
+            .select_related('subject', 'class_assigned')
+            .order_by('day', 'start_time')
+        )
+
+    # Group by day so the template can render a clean schedule
+    DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday']
+    schedule = {day: [] for day in DAYS}
+    for slot in slots:
+        schedule[slot.day].append(slot)
+
+    return render(request, 'teachers/schedule.html', {
+        'current_year': current_year,
+        'schedule':     schedule,
+        'days':         DAYS,
+        'total_slots':  len(slots),
+    })

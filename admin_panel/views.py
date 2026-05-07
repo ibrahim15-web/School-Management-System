@@ -4,10 +4,11 @@ from datetime import date
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
+from collections import defaultdict
 
 from accounts.models import CustomUser
-from academics.models import Class, AcademicYear, TeachingAssignment, Subject, Department, Term
-from students.models import Enrollment
+from academics.models import Class, AcademicYear, TeachingAssignment, Subject, Department, Term, TimetableSlot
+from students.models import Enrollment, ParentStudent
 
 # ADMIN GUARD — reusable decorator-like check
 def _require_admin(request):
@@ -985,3 +986,173 @@ def admin_delete_user(request, user_id):
         messages.success(request, f'User "{username}" deleted.')
         return redirect('admin_users')
     return redirect('admin_user_detail', user_id=user_id)
+
+@login_required(login_url='login')
+def admin_parents(request):
+    if not _require_admin(request):
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    parents = CustomUser.objects.filter(
+        is_parent=True,
+        is_member_of_this_school=True,
+    ).order_by('username')
+    parent_list = []
+    for p in parents:
+        links = ParentStudent.objects.filter(
+            parent=p
+        ).select_related('student')
+        parent_list.append({
+            'user': p,
+            'children': [l.student for l in links],
+        })
+    return render(request, 'admin-panel/admin_parents.html', {
+        'parent_list': parent_list,
+    })
+
+@login_required(login_url='login')
+def admin_assign_parent(request, user_id):
+    if not _require_admin(request):
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    parent = get_object_or_404(CustomUser, id=user_id, is_parent=True)
+    students = CustomUser.objects.filter(
+        is_student=True,
+        is_member_of_this_school=True,
+    ).order_by('username')
+    current_links = ParentStudent.objects.filter(
+        parent=parent
+    ).select_related('student')
+    if request.method == 'POST':
+        action     = request.POST.get('action')
+        student_id = request.POST.get('student_id')
+        student    = get_object_or_404(CustomUser, id=student_id, is_student=True)
+        if action == 'add':
+            _, created = ParentStudent.objects.get_or_create(
+                parent=parent, student=student
+            )
+            if created:
+                messages.success(request, f'Linked {student.username} to {parent.username}.')
+            else:
+                messages.info(request, 'Already linked.')
+        elif action == 'remove':
+            ParentStudent.objects.filter(
+                parent=parent, student=student
+            ).delete()
+            messages.success(request, 'Link removed.')
+        return redirect('admin_assign_parent', user_id=user_id)
+    return render(request, 'admin-panel/admin_assign_parent.html', {
+        'parent': parent,
+        'students': students,
+        'current_links': current_links,
+    })
+
+# ── TIMETABLE MANAGEMENT ───
+@login_required(login_url='login')
+def admin_timetable(request):
+    if not _require_admin(request):
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    try:
+        current_year = AcademicYear.objects.get(is_current=True)
+    except AcademicYear.DoesNotExist:
+        current_year = None
+    # Filter by class if requested
+    selected_class_id = request.GET.get('class_id', '')
+    classes = Class.objects.filter(
+        academic_year=current_year
+    ).order_by('name') if current_year else []
+
+    slots_qs = TimetableSlot.objects.filter(
+        academic_year=current_year
+    ).select_related(
+        'class_assigned', 'subject', 'teacher'
+    ).order_by('class_assigned__name', 'day', 'start_time')
+
+    if selected_class_id:
+        slots_qs = slots_qs.filter(class_assigned_id=selected_class_id)
+    # Group by class then day
+    DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday']
+    grouped = defaultdict(lambda: {d: [] for d in DAYS})
+    for slot in slots_qs:
+        grouped[slot.class_assigned][slot.day].append(slot)
+    return render(request, 'admin-panel/admin_timetable.html', {
+        'current_year':      current_year,
+        'classes':           classes,
+        'selected_class_id': selected_class_id,
+        'grouped':           dict(grouped),
+        'days':              DAYS,
+    })
+
+@login_required(login_url='login')
+def admin_timetable_create(request):
+    if not _require_admin(request):
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    try:
+        current_year = AcademicYear.objects.get(is_current=True)
+    except AcademicYear.DoesNotExist:
+        messages.error(request, 'No active academic year.')
+        return redirect('admin_timetable')
+    classes  = Class.objects.filter(
+        academic_year=current_year
+    ).order_by('name')
+    subjects = Subject.objects.all().order_by('name')
+    teachers = CustomUser.objects.filter(
+        is_teacher=True,
+        is_member_of_this_school=True,
+    ).order_by('username')
+    if request.method == 'POST':
+        class_id   = request.POST.get('class_id')
+        subject_id = request.POST.get('subject_id')
+        teacher_id = request.POST.get('teacher_id') or None
+        day        = request.POST.get('day')
+        start_time = request.POST.get('start_time')
+        end_time   = request.POST.get('end_time')
+        room       = request.POST.get('room', '').strip() or None
+        if not all([class_id, subject_id, day, start_time, end_time]):
+            messages.error(request, 'All fields except teacher and room are required.')
+        elif start_time >= end_time:
+            messages.error(request, 'End time must be after start time.')
+        else:
+            try:
+                _, created = TimetableSlot.objects.get_or_create(
+                    class_assigned_id=class_id,
+                    academic_year=current_year,
+                    day=day,
+                    start_time=start_time,
+                    defaults={
+                        'subject_id': subject_id,
+                        'teacher_id': teacher_id,
+                        'end_time':   end_time,
+                        'room':       room,
+                    }
+                )
+                if created:
+                    messages.success(request, 'Timetable slot created.')
+                else:
+                    messages.warning(
+                        request,
+                        'A slot already exists for that class on that day at that time.'
+                    )
+                return redirect('admin_timetable')
+            except Exception as e:
+                messages.error(request, f'Error: {e}')
+    return render(request, 'admin-panel/admin_timetable_form.html', {
+        'current_year': current_year,
+        'classes':      classes,
+        'subjects':     subjects,
+        'teachers':     teachers,
+        'days':         TimetableSlot.DAY_CHOICES,
+        'action':       'Create',
+    })
+
+@login_required(login_url='login')
+def admin_timetable_delete(request, slot_id):
+    if not _require_admin(request):
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    slot = get_object_or_404(TimetableSlot, id=slot_id)
+    if request.method == 'POST':
+        slot.delete()
+        messages.success(request, 'Slot deleted.')
+    return redirect('admin_timetable')

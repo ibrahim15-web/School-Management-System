@@ -44,4 +44,11 @@ urlpatterns = [
     path('users/<uuid:user_id>/toggle-active/', views.admin_toggle_user_active, name='admin_toggle_user_active'),
     path('users/<uuid:user_id>/change-role/', views.admin_change_user_role, name='admin_change_user_role'),
     path('users/<uuid:user_id>/delete/', views.admin_delete_user, name='admin_delete_user'),
+    # ── Parent management ──
+    path('parents/', views.admin_parents, name='admin_parents'),
+    path('parents/<uuid:user_id>/assign/', views.admin_assign_parent, name='admin_assign_parent'),
+    # ── Timetable management ──
+    path('timetable/', views.admin_timetable, name='admin_timetable'),
+    path('timetable/create/', views.admin_timetable_create, name='admin_timetable_create'),
+    path('timetable/<uuid:slot_id>/delete/', views.admin_timetable_delete, name='admin_timetable_delete'),
 ]

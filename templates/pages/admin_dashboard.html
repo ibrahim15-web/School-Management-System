@@ -362,20 +362,6 @@
     </div>
 
     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100
-                         dark:bg-gray-900 dark:border-gray-800 shadow-soft
-                         hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-        <div class="flex items-center gap-3">
-          <span class="inline-grid place-items-center w-12 h-12 rounded-xl
-                       bg-brand-50 text-brand-600 group-hover:bg-brand-100 transition-colors">
-            <i class="fa-solid fa-calendar-days text-xl"></i>
-          </span>
-          <div>
-            <p class="font-semibold">Create timetable</p>
-            <p class="text-xs text-gray-500">Design class schedules</p>
-          </div>
-        </div>
-      </a>
 
       <a href="{% url 'mark_teacher_attendance' %}" class="group p-5 rounded-2xl bg-purple-600 border border-purple-700
                          dark:bg-gray-900 dark:border-gray-800 shadow-soft
@@ -389,21 +375,6 @@
           <div>
             <p class="font-bold text-white">Record attendance</p>
             <p class="text-xs text-purple-100">Mark daily presence</p>
-          </div>
-        </div>
-      </a>
-
-      <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100
-                         dark:bg-gray-900 dark:border-gray-800 shadow-soft
-                         hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-        <div class="flex items-center gap-3">
-          <span class="inline-grid place-items-center w-12 h-12 rounded-xl
-                       bg-brand-50 text-brand-600 group-hover:bg-brand-100 transition-colors">
-            <i class="fa-solid fa-bullhorn text-xl"></i>
-          </span>
-          <div>
-            <p class="font-semibold">Post announcement</p>
-            <p class="text-xs text-gray-500">Share updates schoolwide</p>
           </div>
         </div>
       </a>
@@ -526,6 +497,45 @@
           <div>
             <p class="font-semibold">Manage users</p>
             <p class="text-xs text-gray-500">Search, edit, deactivate accounts</p>
+          </div>
+        </div>
+      </a>
+      <a href="{% url 'admin_parents' %}" class="group p-5 rounded-2xl bg-white border border-gray-100
+        dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div class="flex items-center gap-3">
+          <span class="inline-grid place-items-center w-12 h-12 rounded-xl
+                      bg-brand-50 text-brand-600 group-hover:bg-brand-100 transition-colors">
+            <i class="fa-solid fa-people-group text-xl"></i>
+          </span>
+          <div>
+            <p class="font-semibold">Manage parents</p>
+            <p class="text-xs text-gray-500">Link parents to students</p>
+          </div>
+        </div>
+      </a>
+      <a href="{% url 'admin_timetable' %}" class="group p-5 rounded-2xl bg-white border border-gray-100
+        dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div class="flex items-center gap-3">
+          <span class="inline-grid place-items-center w-12 h-12 rounded-xl
+                      bg-brand-50 text-brand-600 group-hover:bg-brand-100 transition-colors">
+            <i class="fa-solid fa-calendar-week text-xl"></i>
+          </span>
+          <div>
+            <p class="font-semibold">Timetable</p>
+            <p class="text-xs text-gray-500">Manage class schedules</p>
+          </div>
+        </div>
+      </a>
+      <a href="{% url 'announcement_list' %}" class="group p-5 rounded-2xl bg-white border border-gray-100
+        dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div class="flex items-center gap-3">
+          <span class="inline-grid place-items-center w-12 h-12 rounded-xl
+                      bg-brand-50 text-brand-600 group-hover:bg-brand-100 transition-colors">
+            <i class="fa-solid fa-bullhorn text-xl"></i>
+          </span>
+          <div>
+            <p class="font-semibold">Post announcements</p>
+            <p class="text-xs text-gray-500">Post school-wide notices</p>
           </div>
         </div>
       </a>

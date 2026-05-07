@@ -1,0 +1,74 @@
+{% if recent_notifications %}
+<div class="bg-white dark:bg-gray-900 border border-gray-100
+            dark:border-gray-800 rounded-2xl shadow-soft overflow-hidden">
+
+  <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-800
+              flex items-center justify-between">
+    <div>
+      <p class="font-semibold text-gray-900 dark:text-white">
+        Unread Notifications
+      </p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+        {{ recent_notifications|length }} unread
+      </p>
+    </div>
+    <a href="{% url 'notification_list' %}"
+       class="text-xs text-brand-600 hover:underline">
+      View all →
+    </a>
+  </div>
+
+  <ul class="divide-y divide-gray-100 dark:divide-gray-800">
+    {% for notif in recent_notifications %}
+    <li class="px-5 py-3 flex items-start gap-3">
+
+      <div class="flex-shrink-0 w-7 h-7 rounded-lg mt-0.5
+                  flex items-center justify-center
+                  {% if notif.notif_type == 'attendance' %}
+                    bg-green-50 dark:bg-green-900/20
+                  {% elif notif.notif_type == 'grade' %}
+                    bg-purple-50 dark:bg-purple-900/20
+                  {% elif notif.notif_type == 'announcement' %}
+                    bg-blue-50 dark:bg-blue-900/20
+                  {% else %}
+                    bg-gray-50 dark:bg-gray-800
+                  {% endif %}">
+        <i class="fa-solid text-xs
+                  {% if notif.notif_type == 'attendance' %}
+                    fa-clipboard-check text-green-600 dark:text-green-400
+                  {% elif notif.notif_type == 'grade' %}
+                    fa-list-check text-purple-600 dark:text-purple-400
+                  {% elif notif.notif_type == 'announcement' %}
+                    fa-bullhorn text-blue-600 dark:text-blue-400
+                  {% else %}
+                    fa-bell text-gray-400
+                  {% endif %}"></i>
+      </div>
+
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+          {{ notif.title }}
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          {{ notif.created_at|timesince }} ago
+        </p>
+      </div>
+
+      <span class="flex-shrink-0 w-2 h-2 rounded-full
+                   bg-brand-500 mt-2"></span>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <div class="px-5 py-3 border-t border-gray-100 dark:border-gray-800">
+    <form method="post" action="{% url 'notifications_mark_all_read' %}">
+      {% csrf_token %}
+      <button type="submit"
+              class="text-xs text-gray-500 dark:text-gray-400 hover:underline">
+        Mark all as read
+      </button>
+    </form>
+  </div>
+
+</div>
+{% endif %}

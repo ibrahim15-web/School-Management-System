@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Manage Parents{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Parents</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Link parents to their children
+      </p>
+    </div>
+    <a href="{% url 'admin_dashboard' %}"
+       class="text-sm px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+              text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+      ← Dashboard
+    </a>
+  </div>
+
+  <div class="space-y-4">
+    {% for item in parent_list %}
+    <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+                rounded-2xl shadow-sm p-5">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <p class="font-semibold text-gray-900 dark:text-white">
+            {{ item.user.get_full_name|default:item.user.username }}
+          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.user.email }}</p>
+        </div>
+        <a href="{% url 'admin_assign_parent' item.user.id %}"
+           class="px-4 py-1.5 text-sm rounded-xl bg-brand-600 hover:bg-brand-700
+                  text-white transition-colors flex-shrink-0">
+          Manage children
+        </a>
+      </div>
+      {% if item.children %}
+        <div class="mt-3 flex flex-wrap gap-2">
+          {% for child in item.children %}
+            <span class="px-3 py-1 text-xs rounded-full
+                         bg-blue-100 dark:bg-blue-900/30
+                         text-blue-700 dark:text-blue-300">
+              {{ child.get_full_name|default:child.username }}
+            </span>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="mt-2 text-xs text-yellow-600 dark:text-yellow-400">No children linked yet</p>
+      {% endif %}
+    </div>
+    {% empty %}
+      <p class="text-center text-gray-500 dark:text-gray-400 py-12">
+        No approved parents found.
+      </p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}My Grades{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Enter Grades</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+      Select a class and subject to enter or update grades.
+    </p>
+  </div>
+
+  {% if not current_year %}
+    <div class="p-8 rounded-2xl bg-yellow-50 dark:bg-yellow-900/20
+                border border-yellow-200 dark:border-yellow-800 text-center">
+      <p class="text-sm text-yellow-700 dark:text-yellow-300">
+        No active academic year. Contact administration.
+      </p>
+    </div>
+
+  {% elif not assignments %}
+    <div class="p-8 rounded-2xl bg-white dark:bg-gray-900
+                border border-gray-100 dark:border-gray-800 text-center">
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        No teaching assignments for {{ current_year.name }}.
+      </p>
+    </div>
+
+  {% else %}
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for assignment in assignments %}
+      <a href="{% url 'enter_grades' assignment.id %}"
+         class="p-5 rounded-2xl bg-white dark:bg-gray-900
+                border border-gray-100 dark:border-gray-800
+                shadow-soft hover:shadow-lg hover:-translate-y-1
+                transition-all duration-200 block">
+        <p class="font-semibold text-gray-900 dark:text-white">
+          {{ assignment.class_assigned.name }}
+        </p>
+        <p class="text-sm text-purple-600 dark:text-purple-400 mt-0.5">
+          {{ assignment.subject.name }}
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
+          {{ assignment.student_count }} student{{ assignment.student_count|pluralize }}
+        </p>
+      </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

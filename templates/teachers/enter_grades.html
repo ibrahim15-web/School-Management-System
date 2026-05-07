@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block title %}
+  Grades — {{ assignment.class_assigned.name }} / {{ assignment.subject.name }}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+  {# Header #}
+  <div class="mb-6">
+    <a href="{% url 'teacher_grades' %}"
+       class="text-sm text-gray-500 hover:text-gray-700
+              dark:hover:text-gray-300 mb-2 inline-block">
+      ← Back to grades
+    </a>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+      {{ assignment.class_assigned.name }} — {{ assignment.subject.name }}
+    </h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+      {{ assignment.academic_year.name }}
+    </p>
+  </div>
+
+  {# Filter bar — exam type + term selector (GET, no save) #}
+  <form method="get"
+        class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+               rounded-2xl shadow-soft p-5 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Exam type
+        </label>
+        <select name="exam_type"
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                       bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-600">
+          {% for value, label in exam_types %}
+            <option value="{{ value }}"
+                    {% if value == exam_type %}selected{% endif %}>
+              {{ label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Term (optional)
+        </label>
+        <select name="term_id"
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                       bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-600">
+          <option value="">— No specific term —</option>
+          {% for term in terms %}
+            <option value="{{ term.id }}"
+                    {% if selected_term_id == term.id|stringformat:'s' %}selected{% endif %}>
+              {{ term.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit"
+              class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700
+                     text-white text-sm font-semibold transition-colors">
+        Load
+      </button>
+
+    </div>
+  </form>
+
+  {# Grade entry form #}
+  <form method="post"
+        class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+               rounded-2xl shadow-soft overflow-hidden">
+    {% csrf_token %}
+    <input type="hidden" name="exam_type" value="{{ exam_type }}">
+    <input type="hidden" name="term_id"   value="{{ selected_term_id }}">
+
+    {# Max score row #}
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800
+                flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <p class="font-semibold text-gray-900 dark:text-white">
+          {% for value, label in exam_types %}
+            {% if value == exam_type %}{{ label }}{% endif %}
+          {% endfor %}
+          {% if selected_term %} — {{ selected_term.name }}{% endif %}
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          Leave blank to skip a student without overwriting existing score.
+        </p>
+      </div>
+      <div class="flex items-center gap-3 flex-shrink-0">
+        <label class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+          Max score
+        </label>
+        <input type="number" name="max_score" value="100" min="1" step="0.01"
+               class="w-24 px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700
+                      bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                      focus:outline-none focus:ring-2 focus:ring-brand-600">
+      </div>
+    </div>
+
+    {# Student rows #}
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-800/60">
+          <tr class="text-left text-xs font-medium text-gray-500
+                     dark:text-gray-400 uppercase tracking-wider">
+            <th class="px-6 py-3">#</th>
+            <th class="px-6 py-3">Student</th>
+            <th class="px-6 py-3 text-center">Existing score</th>
+            <th class="px-6 py-3 text-center">New score</th>
+            <th class="px-6 py-3 text-center">Grade</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+          {% for student in students %}
+          {% with existing=existing_map|default:"" %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
+            <td class="px-6 py-3 text-gray-500 dark:text-gray-400">
+              {{ forloop.counter }}
+            </td>
+            <td class="px-6 py-3">
+              <div class="flex items-center gap-3">
+                <img src="{% if student.profile_image %}{{ student.profile_image.url }}{% else %}https://ui-avatars.com/api/?name={{ student.username }}&size=32{% endif %}"
+                     alt="{{ student.username }}"
+                     class="w-8 h-8 rounded-full object-cover border
+                            border-gray-200 dark:border-gray-700 flex-shrink-0">
+                <div>
+                  <p class="font-medium text-gray-900 dark:text-white">
+                    {{ student.get_full_name|default:student.username }}
+                  </p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ student.email }}
+                  </p>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-3 text-center">
+              {% if student.id in existing_map %}
+                {% with g=existing_map|get_item:student.id %}
+                  <span class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ g.score }}/{{ g.max_score }}
+                  </span>
+                  <span class="ml-1 px-1.5 py-0.5 text-xs rounded font-bold
+                               {% if g.percentage >= 85 %}bg-green-100 text-green-700
+                               {% elif g.percentage >= 60 %}bg-yellow-100 text-yellow-700
+                               {% else %}bg-red-100 text-red-700{% endif %}">
+                    {{ g.letter_grade }}
+                  </span>
+                {% endwith %}
+              {% else %}
+                <span class="text-xs text-gray-400 dark:text-gray-600">—</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-3 text-center">
+              <input type="number"
+                     name="score_{{ student.id }}"
+                     min="0" step="0.01"
+                     placeholder="—"
+                     class="w-24 px-3 py-1.5 rounded-lg border border-gray-300
+                            dark:border-gray-700 bg-white dark:bg-gray-800
+                            text-gray-900 dark:text-white text-sm text-center
+                            focus:outline-none focus:ring-2 focus:ring-brand-600">
+            </td>
+            <td class="px-6 py-3 text-center text-xs text-gray-400
+                       dark:text-gray-600" id="grade_{{ student.id }}">
+              —
+            </td>
+          </tr>
+          {% endwith %}
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center
+                                   text-gray-500 dark:text-gray-400">
+              No students enrolled in this class.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if students %}
+    <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800
+                flex justify-end">
+      <button type="submit" name="save_grades"
+              class="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700
+                     text-white text-sm font-semibold transition-colors shadow-sm">
+        Save grades
+      </button>
+    </div>
+    {% endif %}
+  </form>
+
+</div>
+
+{# Live letter grade preview as teacher types #}
+<script>
+  const maxInput = document.querySelector('input[name="max_score"]');
+
+  function letterFromPct(pct) {
+    if (pct >= 90) return 'A';
+    if (pct >= 80) return 'B';
+    if (pct >= 70) return 'C';
+    if (pct >= 60) return 'D';
+    return 'F';
+  }
+
+  function colorClass(letter) {
+    return {
+      'A': 'text-green-600 dark:text-green-400',
+      'B': 'text-blue-600 dark:text-blue-400',
+      'C': 'text-yellow-600 dark:text-yellow-400',
+      'D': 'text-orange-600 dark:text-orange-400',
+      'F': 'text-red-600 dark:text-red-400',
+    }[letter] || '';
+  }
+
+  function updateGrade(scoreInput) {
+    const studentId = scoreInput.name.replace('score_', '');
+    const cell = document.getElementById('grade_' + studentId);
+    if (!cell) return;
+
+    const score = parseFloat(scoreInput.value);
+    const max   = parseFloat(maxInput.value) || 100;
+
+    if (isNaN(score) || scoreInput.value.trim() === '') {
+      cell.textContent = '—';
+      cell.className = 'px-6 py-3 text-center text-xs text-gray-400 dark:text-gray-600';
+      return;
+    }
+
+    const pct    = (score / max) * 100;
+    const letter = letterFromPct(pct);
+    cell.textContent = letter + ' (' + pct.toFixed(1) + '%)';
+    cell.className = 'px-6 py-3 text-center text-xs font-bold ' + colorClass(letter);
+  }
+
+  document.querySelectorAll('input[name^="score_"]').forEach(input => {
+    input.addEventListener('input', () => updateGrade(input));
+  });
+
+  maxInput.addEventListener('input', () => {
+    document.querySelectorAll('input[name^="score_"]').forEach(i => updateGrade(i));
+  });
+</script>
+{% endblock %}

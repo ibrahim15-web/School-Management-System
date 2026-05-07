@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Assign Children — {{ parent.username }}{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+  <a href="{% url 'admin_parents' %}"
+     class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mb-4 inline-block">
+    ← Back to parents
+  </a>
+
+  <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+    {{ parent.get_full_name|default:parent.username }}
+  </h1>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Manage linked children</p>
+
+  {% if current_links %}
+  <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+              rounded-2xl shadow-sm p-5 mb-6">
+    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+      Current children
+    </p>
+    <div class="space-y-2">
+      {% for link in current_links %}
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-900 dark:text-white">
+          {{ link.student.get_full_name|default:link.student.username }}
+          <span class="text-xs text-gray-500 ml-1">{{ link.student.email }}</span>
+        </span>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="remove">
+          <input type="hidden" name="student_id" value="{{ link.student.id }}">
+          <button type="submit"
+                  class="text-xs text-red-600 dark:text-red-400 hover:underline">
+            Remove
+          </button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+              rounded-2xl shadow-sm p-6">
+    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+      Link a student
+    </p>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add">
+      <select name="student_id" required
+              class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                     bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                     focus:outline-none focus:ring-2 focus:ring-brand-600">
+        <option value="" disabled selected>Choose a student...</option>
+        {% for student in students %}
+          <option value="{{ student.id }}">
+            {{ student.get_full_name|default:student.username }} — {{ student.email }}
+          </option>
+        {% endfor %}
+      </select>
+      <button type="submit"
+              class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700
+                     text-white text-sm font-semibold transition-colors">
+        Link student
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

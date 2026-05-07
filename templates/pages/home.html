@@ -3,274 +3,694 @@
 {% block title %}Home • School Management System{% endblock %}
 {% block extra_head_scripts %}
   <script defer src="{% static 'javascript/home.js' %}?v=1"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 {% block content %}
-  <!-- Top Banner / Alert (optional) -->
+  <!-- Top Banner / Alert -->
+  {% if current_year %}
   <div class="hidden md:block bg-gradient-to-r from-brand-600 to-brand-500 text-white text-sm">
     <div class="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-      <p class="truncate">Welcome to EduManager — A modern School Management System template.</p>
-      <a href="#features" class="underline/50 hover:underline font-medium">Explore features</a>
+      <p class="truncate">
+        <i class="fa-solid fa-graduation-cap mr-2"></i>
+        Academic Year <strong>{{ current_year.name }}</strong> is currently active.
+      </p>
+      {% if user.is_authenticated %}
+        {% if user.is_staff %}
+          <a href="{% url 'admin_dashboard' %}" class="hover:underline font-medium">
+            Go to Admin Dashboard →
+          </a>
+        {% elif user.is_teacher %}
+          <a href="{% url 'teacher_dashboard' %}" class="hover:underline font-medium">
+            Go to Teacher Dashboard →
+          </a>
+        {% elif user.is_student %}
+          <a href="{% url 'student_dashboard' %}" class="hover:underline font-medium">
+            Go to My Dashboard →
+          </a>
+        {% elif user.is_parent %}
+          <a href="{% url 'parent_dashboard' %}" class="hover:underline font-medium">
+            Go to My Dashboard →
+          </a>
+        {% endif %}
+      {% else %}
+        <a href="{% url 'register' %}" class="hover:underline font-medium">
+          Join the school →
+        </a>
+      {% endif %}
     </div>
   </div>
+  {% endif %}
   <!-- Hero -->
   <section id="overview" class="relative overflow-hidden">
-    <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-gradient-to-b from-white to-transparent dark:from-gray-900"></div>
+    <div aria-hidden="true"
+        class="pointer-events-none absolute inset-0
+                bg-gradient-to-b from-white to-transparent dark:from-gray-900">
+    </div>
 
-    <div class="max-w-7xl mx-auto px-4 py-16 md:py-24 grid md:grid-cols-2 gap-10 items-center">
+    <div class="max-w-7xl mx-auto px-4 py-16 md:py-24
+                grid md:grid-cols-2 gap-10 items-center">
+
+      {# Left — text #}
       <div>
-        <span class="inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">
-          <span class="w-1.5 h-1.5 rounded-full bg-brand-600"></span>
-          Live Dashboard Preview
-        </span>
-        <h1 class="mt-4 text-4xl md:text-5xl font-extrabold tracking-tight">Manage your school with clarity and speed.</h1>
-        <p class="mt-4 text-gray-600 dark:text-gray-300">This is a production-ready homepage template for a School Management System. Plug it into Django views later. Includes sections for stats, quick actions, announcements, and events.</p>
+        {% if user.is_authenticated %}
+          <span class="inline-flex items-center gap-2 text-xs font-medium px-3 py-1
+                      rounded-full bg-green-50 text-green-700
+                      dark:bg-green-900/40 dark:text-green-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+            Logged in as {{ user.display_role }}
+          </span>
+        {% else %}
+          <span class="inline-flex items-center gap-2 text-xs font-medium px-3 py-1
+                      rounded-full bg-brand-50 text-brand-700
+                      dark:bg-brand-900/40 dark:text-brand-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-brand-600"></span>
+            School Management System
+          </span>
+        {% endif %}
+
+        <h1 class="mt-4 text-4xl md:text-5xl font-extrabold tracking-tight
+                  text-gray-900 dark:text-white">
+          Manage your school with
+          <span class="text-brand-600">clarity</span> and speed.
+        </h1>
+
+        <p class="mt-4 text-gray-600 dark:text-gray-300">
+          A complete school management platform covering attendance, grades,
+          timetables, and communication — all in one place.
+        </p>
+
         <div class="mt-6 flex flex-wrap gap-3">
-          <a href="#quick-actions" class="px-5 py-2.5 rounded-xl bg-brand-600 text-white hover:bg-brand-700 shadow-soft">Quick actions</a>
-          <a href="#features" class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">View features</a>
+          {% if user.is_authenticated %}
+            {% if user.is_staff %}
+              <a href="{% url 'admin_dashboard' %}"
+                class="px-5 py-2.5 rounded-xl bg-brand-600 text-white
+                        hover:bg-brand-700 shadow-soft">
+                Admin Dashboard
+              </a>
+              <a href="{% url 'admin_students' %}"
+                class="px-5 py-2.5 rounded-xl border border-gray-200
+                        dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">
+                Manage Students
+              </a>
+            {% elif user.is_teacher %}
+              <a href="{% url 'teacher_dashboard' %}"
+                class="px-5 py-2.5 rounded-xl bg-brand-600 text-white
+                        hover:bg-brand-700 shadow-soft">
+                My Dashboard
+              </a>
+              <a href="{% url 'teacher_attendance' %}"
+                class="px-5 py-2.5 rounded-xl border border-gray-200
+                        dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">
+                Take Attendance
+              </a>
+            {% elif user.is_student %}
+              <a href="{% url 'student_dashboard' %}"
+                class="px-5 py-2.5 rounded-xl bg-brand-600 text-white
+                        hover:bg-brand-700 shadow-soft">
+                My Dashboard
+              </a>
+              <a href="{% url 'profile' %}"
+                class="px-5 py-2.5 rounded-xl border border-gray-200
+                        dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">
+                My Profile
+              </a>
+            {% elif user.is_parent %}
+              <a href="{% url 'parent_dashboard' %}"
+                class="px-5 py-2.5 rounded-xl bg-brand-600 text-white
+                        hover:bg-brand-700 shadow-soft">
+                My Children
+              </a>
+              <a href="{% url 'profile' %}"
+                class="px-5 py-2.5 rounded-xl border border-gray-200
+                        dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">
+                My Profile
+              </a>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'login' %}"
+              class="px-5 py-2.5 rounded-xl bg-brand-600 text-white
+                      hover:bg-brand-700 shadow-soft">
+              Sign in
+            </a>
+            <a href="{% url 'register' %}"
+              class="px-5 py-2.5 rounded-xl border border-gray-200
+                      dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">
+              Register
+            </a>
+          {% endif %}
         </div>
 
-        <!-- Trust badges / KPI strip -->
+        {# KPI strip — real data #}
         <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div class="p-4 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-            <p class="text-2xl font-bold">{{ total_students }}</p>
-            <p class="text-xs text-gray-500">Active Students</p>
+
+          <div class="p-4 rounded-2xl bg-white border border-gray-100
+                      dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              {{ total_students }}
+            </p>
+            <p class="text-xs text-gray-500 mt-0.5">Active Students</p>
           </div>
-          <div class="p-4 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-            <p class="text-2xl font-bold">{{ total_teachers }}</p>
-            <p class="text-xs text-gray-500">Teachers</p>
+
+          <div class="p-4 rounded-2xl bg-white border border-gray-100
+                      dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              {{ total_teachers }}
+            </p>
+            <p class="text-xs text-gray-500 mt-0.5">Teachers</p>
           </div>
-          <div class="p-4 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-            <p class="text-2xl font-bold">97%</p>
-            <p class="text-xs text-gray-500">Avg. attendance</p>
+
+          <div class="p-4 rounded-2xl bg-white border border-gray-100
+                      dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+            <p class="text-2xl font-bold
+                      {% if today_percentage >= 85 %}text-green-600
+                      {% elif today_percentage >= 60 %}text-yellow-600
+                      {% elif today_total == 0 %}text-gray-400
+                      {% else %}text-red-600{% endif %}">
+              {% if today_total > 0 %}{{ today_percentage }}%{% else %}—{% endif %}
+            </p>
+            <p class="text-xs text-gray-500 mt-0.5">
+              Today's Attendance
+              {% if today_total == 0 %}
+                <span class="block text-gray-400">(not marked yet)</span>
+              {% endif %}
+            </p>
           </div>
-          <div class="p-4 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-            <p class="text-2xl font-bold">42</p>
-            <p class="text-xs text-gray-500">Classes</p>
+
+          <div class="p-4 rounded-2xl bg-white border border-gray-100
+                      dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              {{ total_classes }}
+            </p>
+            <p class="text-xs text-gray-500 mt-0.5">
+              Classes
+              {% if current_year %}
+                <span class="block text-gray-400">{{ current_year.name }}</span>
+              {% endif %}
+            </p>
           </div>
+
         </div>
       </div>
 
       <!-- Illustrative panel -->
       <div class="relative">
-        <div class="absolute -inset-6 rounded-3xl bg-gradient-to-tr from-brand-500/10 to-transparent blur-2xl"></div>
-        <div class="relative rounded-3xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft overflow-hidden">
-          <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+        <div class="absolute -inset-6 rounded-3xl
+                    bg-gradient-to-tr from-brand-500/10 to-transparent blur-2xl">
+        </div>
+        <div class="relative rounded-3xl bg-white border border-gray-100
+                    dark:bg-gray-900 dark:border-gray-800 shadow-soft overflow-hidden">
+
+          {# Fake browser chrome #}
+          <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-800
+                      flex items-center gap-2">
             <div class="w-3 h-3 rounded-full bg-red-400"></div>
             <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
             <div class="w-3 h-3 rounded-full bg-green-400"></div>
-            <span class="ml-2 text-xs text-gray-500">Dashboard Preview</span>
+            <span class="ml-2 text-xs text-gray-500">EduManager Dashboard</span>
           </div>
-          <div class="p-6 grid sm:grid-cols-2 gap-6">
-            <div class="space-y-3">
-              <p class="text-sm font-medium">Today</p>
-              <div class="h-36 rounded-2xl bg-gradient-to-br from-brand-50 to-white border border-gray-100 dark:from-gray-800 dark:to-gray-900 dark:border-gray-800 flex items-center justify-center text-sm text-gray-500">Attendance Chart</div>
-              <div class="grid grid-cols-2 gap-3">
-                <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800 text-xs">New Admissions <span class="block text-xl font-bold">12</span></div>
-                <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800 text-xs">Late Arrivals <span class="block text-xl font-bold">4</span></div>
+
+          <div class="p-6 space-y-4">
+
+            {# Stat row #}
+            <div class="grid grid-cols-3 gap-3">
+              <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-center">
+                <p class="text-xl font-bold text-blue-600 dark:text-blue-400">
+                  {{ total_students }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Students</p>
+              </div>
+              <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-center">
+                <p class="text-xl font-bold text-purple-600 dark:text-purple-400">
+                  {{ total_teachers }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Teachers</p>
+              </div>
+              <div class="p-3 rounded-xl bg-green-50 dark:bg-green-900/20 text-center">
+                <p class="text-xl font-bold text-green-600 dark:text-green-400">
+                  {{ total_classes }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Classes</p>
               </div>
             </div>
-            <div class="space-y-3">
-              <p class="text-sm font-medium">Quick Links</p>
-              <ul class="space-y-2 text-sm">
-                <li><a class="block p-3 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700" href="#">View Timetable</a></li>
-                <li><a class="block p-3 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700" href="#">Enter Attendance</a></li>
-                <li><a class="block p-3 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700" href="#">Post Announcement</a></li>
-              </ul>
+
+            {# Attendance bar #}
+            <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
+              <div class="flex justify-between text-xs text-gray-500
+                          dark:text-gray-400 mb-2">
+                <span>Today's student attendance</span>
+                <span class="font-semibold">
+                  {% if today_total > 0 %}{{ today_percentage }}%{% else %}Not marked{% endif %}
+                </span>
+              </div>
+              <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div class="h-2 rounded-full bg-brand-500"
+                    style="width: {% if today_total > 0 %}{{ today_percentage }}{% else %}0{% endif %}%">
+                </div>
+              </div>
             </div>
+
+            {# Role-based quick links #}
+            <div class="space-y-2">
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400
+                        uppercase tracking-wide">
+                Quick Links
+              </p>
+              {% if user.is_authenticated %}
+                {% if user.is_staff %}
+                  <a href="{% url 'admin_students' %}"
+                    class="flex items-center gap-2 p-2.5 rounded-lg
+                            bg-gray-50 hover:bg-gray-100
+                            dark:bg-gray-800 dark:hover:bg-gray-700
+                            text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                    <i class="fa-solid fa-graduation-cap text-brand-500 w-4"></i>
+                    Manage Students
+                  </a>
+                  <a href="{% url 'admin_teachers' %}"
+                    class="flex items-center gap-2 p-2.5 rounded-lg
+                            bg-gray-50 hover:bg-gray-100
+                            dark:bg-gray-800 dark:hover:bg-gray-700
+                            text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                    <i class="fa-solid fa-chalkboard text-brand-500 w-4"></i>
+                    Manage Teachers
+                  </a>
+                  <a href="{% url 'mark_teacher_attendance' %}"
+                    class="flex items-center gap-2 p-2.5 rounded-lg
+                            bg-gray-50 hover:bg-gray-100
+                            dark:bg-gray-800 dark:hover:bg-gray-700
+                            text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                    <i class="fa-solid fa-clipboard-check text-brand-500 w-4"></i>
+                    Mark Teacher Attendance
+                  </a>
+                {% elif user.is_teacher %}
+                  <a href="{% url 'teacher_attendance' %}"
+                    class="flex items-center gap-2 p-2.5 rounded-lg
+                            bg-gray-50 hover:bg-gray-100
+                            dark:bg-gray-800 dark:hover:bg-gray-700
+                            text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                    <i class="fa-solid fa-clipboard-check text-brand-500 w-4"></i>
+                    Take Attendance
+                  </a>
+                  <a href="{% url 'teacher_grades' %}"
+                    class="flex items-center gap-2 p-2.5 rounded-lg
+                            bg-gray-50 hover:bg-gray-100
+                            dark:bg-gray-800 dark:hover:bg-gray-700
+                            text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                    <i class="fa-solid fa-list-check text-brand-500 w-4"></i>
+                    Enter Grades
+                  </a>
+                  <a href="{% url 'teacher_schedule' %}"
+                    class="flex items-center gap-2 p-2.5 rounded-lg
+                            bg-gray-50 hover:bg-gray-100
+                            dark:bg-gray-800 dark:hover:bg-gray-700
+                            text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                    <i class="fa-solid fa-calendar-week text-brand-500 w-4"></i>
+                    My Schedule
+                  </a>
+                {% elif user.is_student %}
+                  <a href="{% url 'student_dashboard' %}"
+                    class="flex items-center gap-2 p-2.5 rounded-lg
+                            bg-gray-50 hover:bg-gray-100
+                            dark:bg-gray-800 dark:hover:bg-gray-700
+                            text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                    <i class="fa-solid fa-gauge text-brand-500 w-4"></i>
+                    My Dashboard
+                  </a>
+                  <a href="{% url 'profile' %}"
+                    class="flex items-center gap-2 p-2.5 rounded-lg
+                            bg-gray-50 hover:bg-gray-100
+                            dark:bg-gray-800 dark:hover:bg-gray-700
+                            text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                    <i class="fa-solid fa-user text-brand-500 w-4"></i>
+                    My Profile
+                  </a>
+                {% elif user.is_parent %}
+                  <a href="{% url 'parent_dashboard' %}"
+                    class="flex items-center gap-2 p-2.5 rounded-lg
+                            bg-gray-50 hover:bg-gray-100
+                            dark:bg-gray-800 dark:hover:bg-gray-700
+                            text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                    <i class="fa-solid fa-people-group text-brand-500 w-4"></i>
+                    My Children
+                  </a>
+                {% endif %}
+              {% else %}
+                <a href="{% url 'login' %}"
+                  class="flex items-center gap-2 p-2.5 rounded-lg
+                          bg-gray-50 hover:bg-gray-100
+                          dark:bg-gray-800 dark:hover:bg-gray-700
+                          text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                  <i class="fa-solid fa-right-to-bracket text-brand-500 w-4"></i>
+                  Sign in to your account
+                </a>
+                <a href="{% url 'register' %}"
+                  class="flex items-center gap-2 p-2.5 rounded-lg
+                          bg-gray-50 hover:bg-gray-100
+                          dark:bg-gray-800 dark:hover:bg-gray-700
+                          text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                  <i class="fa-solid fa-user-plus text-brand-500 w-4"></i>
+                  Register
+                </a>
+              {% endif %}
+            </div>
+
           </div>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- Quick Actions -->
-  <section id="quick-actions" class="max-w-7xl mx-auto px-4 py-12">
-    <div class="flex items-end justify-between gap-4">
-      <div>
-        <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Quick Actions</h2>
-        <p class="mt-2 text-gray-600 dark:text-gray-300">High-frequency tasks for admins, teachers, and students.</p>
-      </div>
-      <a href="#" class="hidden sm:inline-block text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">Customize</a>
-    </div>
-
-    <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- Card -->
-      <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg transition-shadow">
-        <div class="flex items-center gap-3">
-          <span class="inline-grid place-items-center w-10 h-10 rounded-xl bg-brand-600/10 text-brand-700 dark:text-brand-300">
-            <!-- Calendar Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M7 2a1 1 0 0 0 0 2h1V2h2v2h4V2h2v2h1a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V2h2v2H8V2H7zM5 9h14v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/></svg>
-          </span>
-          <div>
-            <p class="font-semibold">Create timetable</p>
-            <p class="text-xs text-gray-500">Design class schedules</p>
-          </div>
-        </div>
-      </a>
-
-      <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg transition-shadow">
-        <div class="flex items-center gap-3">
-          <span class="inline-grid place-items-center w-10 h-10 rounded-xl bg-brand-600/10 text-brand-700 dark:text-brand-300">
-            <!-- Clipboard Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M9 2a2 2 0 0 0-2 2H6a3 3 0 0 0-3 3v11a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3h-1a2 2 0 0 0-2-2zM9 4h6v2H9z"/></svg>
-          </span>
-          <div>
-            <p class="font-semibold">Record attendance</p>
-            <p class="text-xs text-gray-500">Mark daily presence</p>
-          </div>
-        </div>
-      </a>
-
-      <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg transition-shadow">
-        <div class="flex items-center gap-3">
-          <span class="inline-grid place-items-center w-10 h-10 rounded-xl bg-brand-600/10 text-brand-700 dark:text-brand-300">
-            <!-- Megaphone Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M21 8a2 2 0 0 0-2-2h-3l-7-3v18l7-3h3a2 2 0 0 0 2-2zM5 7H3v10h2z"/></svg>
-          </span>
-          <div>
-            <p class="font-semibold">Post announcement</p>
-            <p class="text-xs text-gray-500">Share updates schoolwide</p>
-          </div>
-        </div>
-      </a>
-
-      <a href="#" class="group p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft hover:shadow-lg transition-shadow">
-        <div class="flex items-center gap-3">
-          <span class="inline-grid place-items-center w-10 h-10 rounded-xl bg-brand-600/10 text-brand-700 dark:text-brand-300">
-            <!-- User Plus Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm-9 9a7 7 0 0 1 14 0zM19 8h-2V6h-2v2h-2v2h2v2h2v-2h2z"/></svg>
-          </span>
-          <div>
-            <p class="font-semibold">Enroll student</p>
-            <p class="text-xs text-gray-500">Add new profiles</p>
-          </div>
-        </div>
-      </a>
     </div>
   </section>
 
   <!-- Feature Highlights -->
   <section id="features" class="max-w-7xl mx-auto px-4 py-12">
-    <div class="grid lg:grid-cols-3 gap-6">
-      <div class="p-6 rounded-3xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-        <h3 class="text-lg font-semibold">Role-based access</h3>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Admins, teachers, students, and guardians each get a tailored experience.</p>
-        <ul class="mt-4 space-y-2 text-sm list-disc list-inside text-gray-600 dark:text-gray-300">
-          <li>Granular permissions</li>
-          <li>Secure authentication</li>
-          <li>Activity logs</li>
+    <div class="text-center mb-10">
+      <h2 class="text-2xl md:text-3xl font-bold tracking-tight
+                text-gray-900 dark:text-white">
+        Everything your school needs
+      </h2>
+      <p class="mt-2 text-gray-600 dark:text-gray-300">
+        Built for admins, teachers, students, and parents.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+
+      <div class="p-6 rounded-3xl bg-white border border-gray-100
+                  dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+        <div class="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-900/20
+                    flex items-center justify-center mb-4">
+          <i class="fa-solid fa-shield-halved text-xl text-blue-600 dark:text-blue-400"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          Role-based access
+        </h3>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+          Admins, teachers, students, and parents each see exactly what
+          they need — nothing more.
+        </p>
+        <ul class="mt-4 space-y-1.5 text-sm text-gray-500 dark:text-gray-400">
+          <li class="flex items-center gap-2">
+            <i class="fa-solid fa-check text-green-500 text-xs"></i>
+            Approval workflow for new registrations
+          </li>
+          <li class="flex items-center gap-2">
+            <i class="fa-solid fa-check text-green-500 text-xs"></i>
+            Secure authentication
+          </li>
+          <li class="flex items-center gap-2">
+            <i class="fa-solid fa-check text-green-500 text-xs"></i>
+            Granular role permissions
+          </li>
         </ul>
       </div>
-      <div class="p-6 rounded-3xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-        <h3 class="text-lg font-semibold">Attendance & grading</h3>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Streamlined daily workflows with export-ready records.</p>
-        <ul class="mt-4 space-y-2 text-sm list-disc list-inside text-gray-600 dark:text-gray-300">
-          <li>Bulk mark attendance</li>
-          <li>Gradebook with weights</li>
-          <li>Progress reports</li>
+
+      <div class="p-6 rounded-3xl bg-white border border-gray-100
+                  dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+        <div class="w-11 h-11 rounded-xl bg-green-50 dark:bg-green-900/20
+                    flex items-center justify-center mb-4">
+          <i class="fa-solid fa-clipboard-check text-xl text-green-600 dark:text-green-400"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          Attendance & Grades
+        </h3>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+          Teachers mark daily attendance and enter grades per subject.
+          Students and parents see results in real time.
+        </p>
+        <ul class="mt-4 space-y-1.5 text-sm text-gray-500 dark:text-gray-400">
+          <li class="flex items-center gap-2">
+            <i class="fa-solid fa-check text-green-500 text-xs"></i>
+            Daily attendance per class
+          </li>
+          <li class="flex items-center gap-2">
+            <i class="fa-solid fa-check text-green-500 text-xs"></i>
+            Grades with letter grade calculation
+          </li>
+          <li class="flex items-center gap-2">
+            <i class="fa-solid fa-check text-green-500 text-xs"></i>
+            Attendance charts for admins
+          </li>
         </ul>
       </div>
-      <div class="p-6 rounded-3xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-        <h3 class="text-lg font-semibold">Communication hub</h3>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Announcements, messaging, and parent notifications in one place.</p>
-        <ul class="mt-4 space-y-2 text-sm list-disc list-inside text-gray-600 dark:text-gray-300">
-          <li>Targeted notices</li>
-          <li>Two-way messaging</li>
-          <li>Email/SMS hooks</li>
+
+      <div class="p-6 rounded-3xl bg-white border border-gray-100
+                  dark:bg-gray-900 dark:border-gray-800 shadow-soft">
+        <div class="w-11 h-11 rounded-xl bg-purple-50 dark:bg-purple-900/20
+                    flex items-center justify-center mb-4">
+          <i class="fa-solid fa-calendar-week text-xl text-purple-600 dark:text-purple-400"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          Timetable & Scheduling
+        </h3>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+          Admins build class timetables. Teachers see their personal
+          schedule. Students see their weekly class plan.
+        </p>
+        <ul class="mt-4 space-y-1.5 text-sm text-gray-500 dark:text-gray-400">
+          <li class="flex items-center gap-2">
+            <i class="fa-solid fa-check text-green-500 text-xs"></i>
+            Weekly schedule per class
+          </li>
+          <li class="flex items-center gap-2">
+            <i class="fa-solid fa-check text-green-500 text-xs"></i>
+            Room assignment support
+          </li>
+          <li class="flex items-center gap-2">
+            <i class="fa-solid fa-check text-green-500 text-xs"></i>
+            Teacher timetable view
+          </li>
         </ul>
       </div>
+
     </div>
   </section>
 
-  <!-- Announcements -->
-  <section id="announcements" class="max-w-7xl mx-auto px-4 py-12">
-    <div class="flex items-end justify-between gap-4">
-      <div>
-        <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Announcements</h2>
-        <p class="mt-2 text-gray-600 dark:text-gray-300">Latest school-wide updates.</p>
+{# ── ANNOUNCEMENTS ─── #}
+{% if announcements %}
+<section id="announcements" class="max-w-7xl mx-auto px-4 py-12">
+  <div class="flex items-end justify-between gap-4 mb-6">
+    <div>
+      <h2 class="text-2xl md:text-3xl font-bold tracking-tight
+                 text-gray-900 dark:text-white">
+        Announcements
+      </h2>
+      <p class="mt-1 text-gray-600 dark:text-gray-300">
+        {% if user.is_authenticated %}
+          Latest updates for you.
+        {% else %}
+          Latest school-wide updates.
+        {% endif %}
+      </p>
+    </div>
+    {% if user.is_authenticated and user.is_staff %}
+      <a href="{% url 'announcement_list' %}"
+         class="hidden sm:inline-block text-sm px-3 py-2 rounded-xl
+                border border-gray-200 dark:border-gray-800
+                hover:bg-gray-100 dark:hover:bg-gray-800">
+        Manage all
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="space-y-4">
+    {% for ann in announcements %}
+    <div class="p-5 rounded-2xl bg-white dark:bg-gray-900
+                border
+                {% if ann.is_pinned %}
+                  border-brand-200 dark:border-brand-800
+                {% else %}
+                  border-gray-100 dark:border-gray-800
+                {% endif %}
+                shadow-soft">
+
+      <div class="flex items-start gap-4">
+
+        {# Icon #}
+        <div class="flex-shrink-0 w-10 h-10 rounded-xl
+                    {% if ann.is_pinned %}
+                      bg-brand-50 dark:bg-brand-900/20
+                    {% else %}
+                      bg-gray-50 dark:bg-gray-800
+                    {% endif %}
+                    flex items-center justify-center">
+          <i class="fa-solid
+                    {% if ann.is_pinned %}fa-thumbtack text-brand-600
+                    {% else %}fa-bullhorn text-gray-400{% endif %}
+                    text-sm"></i>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap mb-0.5">
+            {% if ann.is_pinned %}
+              <span class="text-xs font-semibold text-brand-600
+                           dark:text-brand-400 uppercase tracking-wide">
+                Pinned
+              </span>
+            {% endif %}
+            <span class="text-xs text-gray-400 dark:text-gray-600 capitalize">
+              {{ ann.get_target_display }}
+            </span>
+          </div>
+
+          <h3 class="font-semibold text-gray-900 dark:text-white">
+            {{ ann.title }}
+          </h3>
+          <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+            {{ ann.short_body }}
+          </p>
+          <p class="mt-2 text-xs text-gray-400 dark:text-gray-600">
+            {{ ann.created_at|timesince }} ago
+            {% if ann.posted_by %}
+              · by {{ ann.posted_by.get_full_name|default:ann.posted_by.username }}
+            {% endif %}
+          </p>
+        </div>
+
       </div>
-      <a href="#" class="hidden sm:inline-block text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">View all</a>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+  {# ── ROLE PATHS ─── #}
+  <section class="max-w-7xl mx-auto px-4 py-12">
+    <div class="text-center mb-10">
+      <h2 class="text-2xl md:text-3xl font-bold tracking-tight
+                text-gray-900 dark:text-white">
+        One platform, every role
+      </h2>
+      <p class="mt-2 text-gray-600 dark:text-gray-300">
+        Each person gets a dashboard built for their needs.
+      </p>
     </div>
 
-    <div class="mt-6 grid md:grid-cols-2 gap-4">
-      <article class="p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-        <h3 class="font-semibold">Parent-Teacher Meetings – Term 1</h3>
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Meetings will run next week from Monday to Wednesday. Check your email to book time slots.</p>
-        <div class="mt-2 text-xs text-gray-500">Posted 2 days ago</div>
-      </article>
-      <article class="p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft">
-        <h3 class="font-semibold">Science Fair Registration Open</h3>
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Students interested in participating can submit their proposals by the end of the month.</p>
-        <div class="mt-2 text-xs text-gray-500">Posted 5 days ago</div>
-      </article>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <div class="p-5 rounded-2xl border-2
+                  {% if user.is_authenticated and user.is_staff %}
+                    border-brand-400 bg-brand-50 dark:bg-brand-900/20
+                  {% else %}
+                    border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900
+                  {% endif %}">
+        <div class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/20
+                    flex items-center justify-center mb-3">
+          <i class="fa-solid fa-user-shield text-red-600 dark:text-red-400"></i>
+        </div>
+        <p class="font-semibold text-gray-900 dark:text-white">Administrator</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Full system control — users, classes, timetables, attendance overview.
+        </p>
+        {% if user.is_authenticated and user.is_staff %}
+          <a href="{% url 'admin_dashboard' %}"
+            class="mt-3 inline-block text-xs text-brand-600 hover:underline font-medium">
+            Go to dashboard →
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="p-5 rounded-2xl border-2
+                  {% if user.is_authenticated and user.is_teacher %}
+                    border-brand-400 bg-brand-50 dark:bg-brand-900/20
+                  {% else %}
+                    border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900
+                  {% endif %}">
+        <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/20
+                    flex items-center justify-center mb-3">
+          <i class="fa-solid fa-chalkboard-user text-purple-600 dark:text-purple-400"></i>
+        </div>
+        <p class="font-semibold text-gray-900 dark:text-white">Teacher</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Mark attendance, enter grades, view schedule and student lists.
+        </p>
+        {% if user.is_authenticated and user.is_teacher %}
+          <a href="{% url 'teacher_dashboard' %}"
+            class="mt-3 inline-block text-xs text-brand-600 hover:underline font-medium">
+            Go to dashboard →
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="p-5 rounded-2xl border-2
+                  {% if user.is_authenticated and user.is_student %}
+                    border-brand-400 bg-brand-50 dark:bg-brand-900/20
+                  {% else %}
+                    border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900
+                  {% endif %}">
+        <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/20
+                    flex items-center justify-center mb-3">
+          <i class="fa-solid fa-user-graduate text-blue-600 dark:text-blue-400"></i>
+        </div>
+        <p class="font-semibold text-gray-900 dark:text-white">Student</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          View class, subjects, teachers, grades, timetable, and attendance history.
+        </p>
+        {% if user.is_authenticated and user.is_student %}
+          <a href="{% url 'student_dashboard' %}"
+            class="mt-3 inline-block text-xs text-brand-600 hover:underline font-medium">
+            Go to dashboard →
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="p-5 rounded-2xl border-2
+                  {% if user.is_authenticated and user.is_parent %}
+                    border-brand-400 bg-brand-50 dark:bg-brand-900/20
+                  {% else %}
+                    border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900
+                  {% endif %}">
+        <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/20
+                    flex items-center justify-center mb-3">
+          <i class="fa-solid fa-people-group text-amber-600 dark:text-amber-400"></i>
+        </div>
+        <p class="font-semibold text-gray-900 dark:text-white">Parent</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Monitor all linked children — attendance, grades, and today's status.
+        </p>
+        {% if user.is_authenticated and user.is_parent %}
+          <a href="{% url 'parent_dashboard' %}"
+            class="mt-3 inline-block text-xs text-brand-600 hover:underline font-medium">
+            Go to dashboard →
+          </a>
+        {% endif %}
+      </div>
+
     </div>
   </section>
 
-  <!-- Events (list-style) -->
-  <section id="events" class="max-w-7xl mx-auto px-4 py-12">
-    <div class="flex items-end justify-between gap-4">
-      <div>
-        <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Upcoming Events</h2>
-        <p class="mt-2 text-gray-600 dark:text-gray-300">Keep track of what's next.</p>
-      </div>
-      <a href="#" class="hidden sm:inline-block text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">Calendar</a>
-    </div>
-
-    <ol class="mt-6 space-y-3">
-      <li class="p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft flex items-center gap-4">
-        <div class="w-14 h-14 rounded-xl bg-brand-600 text-white grid place-items-center">
-          <div class="text-center leading-tight">
-            <div class="text-lg font-bold">14</div>
-            <div class="text-[10px] uppercase">Sep</div>
-          </div>
-        </div>
-        <div class="flex-1">
-          <p class="font-medium">Inter-school Football Tournament</p>
-          <p class="text-xs text-gray-500">Main Field • 08:00–12:00</p>
-        </div>
-        <a href="#" class="text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">Details</a>
-      </li>
-      <li class="p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft flex items-center gap-4">
-        <div class="w-14 h-14 rounded-xl bg-brand-600 text-white grid place-items-center">
-          <div class="text-center leading-tight">
-            <div class="text-lg font-bold">22</div>
-            <div class="text-[10px] uppercase">Sep</div>
-          </div>
-        </div>
-        <div class="flex-1">
-          <p class="font-medium">Science Fair Qualifiers</p>
-          <p class="text-xs text-gray-500">Hall B • 13:00–16:00</p>
-        </div>
-        <a href="#" class="text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">Details</a>
-      </li>
-      <li class="p-5 rounded-2xl bg-white border border-gray-100 dark:bg-gray-900 dark:border-gray-800 shadow-soft flex items-center gap-4">
-        <div class="w-14 h-14 rounded-xl bg-brand-600 text-white grid place-items-center">
-          <div class="text-center leading-tight">
-            <div class="text-lg font-bold">03</div>
-            <div class="text-[10px] uppercase">Oct</div>
-          </div>
-        </div>
-        <div class="flex-1">
-          <p class="font-medium">Parent Orientation (New Students)</p>
-          <p class="text-xs text-gray-500">Auditorium • 09:00–11:00</p>
-        </div>
-        <a href="#" class="text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">Details</a>
-      </li>
-    </ol>
-  </section>
-
-  <!-- CTA -->
-  <section id="get-started" class="max-w-7xl mx-auto px-4 py-16">
-    <div class="relative overflow-hidden rounded-3xl border border-gray-100 dark:border-gray-800 bg-gradient-to-r from-brand-600 to-brand-500 text-white p-8 md:p-12 shadow-soft">
-      <div class="max-w-2xl">
-        <h2 class="text-2xl md:text-3xl font-bold">Ready to launch your portal?</h2>
-        <p class="mt-2 text-white/90">Hook this UI into your Django views and models whenever you’re ready. No DTL here — just clean HTML.</p>
+  {# ── CTA ─────────────────────────────────────────────────────── #}
+  {% if not user.is_authenticated %}
+  <section class="max-w-7xl mx-auto px-4 py-16">
+    <div class="relative overflow-hidden rounded-3xl
+                bg-gradient-to-r from-brand-600 to-brand-500
+                text-white p-8 md:p-12 shadow-soft">
+      <div class="max-w-2xl relative z-10">
+        <h2 class="text-2xl md:text-3xl font-bold">
+          Ready to join?
+        </h2>
+        <p class="mt-2 text-white/90">
+          Register your account and wait for admin approval.
+          Once approved, your full dashboard becomes available.
+        </p>
         <div class="mt-6 flex flex-wrap gap-3">
-          <a href="#" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20">Documentation</a>
-          <a href="#contact" class="px-5 py-2.5 rounded-xl bg-white text-brand-700 hover:bg-gray-100">Contact admin</a>
+          <a href="{% url 'register' %}"
+            class="px-5 py-2.5 rounded-xl bg-white text-brand-700
+                    hover:bg-gray-100 font-semibold">
+            Register now
+          </a>
+          <a href="{% url 'login' %}"
+            class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20">
+            Sign in
+          </a>
         </div>
       </div>
-      <div class="absolute -right-24 -bottom-24 w-72 h-72 rounded-full bg-white/10"></div>
+      <div class="absolute -right-24 -bottom-24 w-72 h-72
+                  rounded-full bg-white/10 pointer-events-none">
+      </div>
+      <div class="absolute -right-8 -top-8 w-40 h-40
+                  rounded-full bg-white/5 pointer-events-none">
+      </div>
     </div>
   </section>
-{% endblock %}
+  {% endif %}
+
+  {% endblock %}

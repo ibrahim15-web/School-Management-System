@@ -419,3 +419,140 @@ class TeachingAssignment(models.Model):
     def student_count(self):
         """Get count of students in this assignment"""
         return self.enrolled_students.count()
+    
+class Grade(models.Model):
+    EXAM_TYPE_CHOICES = [
+        ('quiz',       'Quiz'),
+        ('assignment', 'Assignment'),
+        ('midterm',    'Midterm'),
+        ('final',      'Final Exam'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    student = models.ForeignKey(
+        'accounts.CustomUser',
+        on_delete=models.CASCADE,
+        related_name='grades',
+        limit_choices_to={'is_student': True},
+    )
+    subject = models.ForeignKey(
+        'Subject',
+        on_delete=models.CASCADE,
+        related_name='grades',
+    )
+    class_assigned = models.ForeignKey(
+        'Class',
+        on_delete=models.CASCADE,
+        related_name='grades',
+    )
+    academic_year = models.ForeignKey(
+        'AcademicYear',
+        on_delete=models.CASCADE,
+        related_name='grades',
+    )
+    term = models.ForeignKey(
+        'Term',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='grades',
+        help_text="Optional — scope grade to a specific term",
+    )
+    marked_by = models.ForeignKey(
+        'accounts.CustomUser',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='grades_entered',
+        limit_choices_to={'is_teacher': True},
+    )
+    exam_type = models.CharField(
+        max_length=20,
+        choices=EXAM_TYPE_CHOICES,
+    )
+    score     = models.DecimalField(max_digits=5, decimal_places=2)
+    max_score = models.DecimalField(max_digits=5, decimal_places=2, default=100)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        # One grade per student per subject per exam type per term
+        unique_together = [['student', 'subject', 'class_assigned',
+                            'academic_year', 'exam_type', 'term']]
+        ordering = ['-created_at']
+        verbose_name = "Grade"
+        verbose_name_plural = "Grades"
+
+    def __str__(self):
+        return (f"{self.student.username} — {self.subject.name} "
+                f"— {self.get_exam_type_display()}: {self.score}/{self.max_score}")
+
+    @property
+    def percentage(self):
+        if self.max_score > 0:
+            return round(float(self.score) / float(self.max_score) * 100, 1)
+        return 0
+
+    @property
+    def letter_grade(self):
+        p = self.percentage
+        if p >= 90: return 'A'
+        if p >= 80: return 'B'
+        if p >= 70: return 'C'
+        if p >= 60: return 'D'
+        return 'F'
+
+class TimetableSlot(models.Model):
+    DAY_CHOICES = [
+        ('monday',    'Monday'),
+        ('tuesday',   'Tuesday'),
+        ('wednesday', 'Wednesday'),
+        ('thursday',  'Thursday'),
+        ('friday',    'Friday'),
+        ('saturday',  'Saturday'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    class_assigned = models.ForeignKey(
+        'Class',
+        on_delete=models.CASCADE,
+        related_name='timetable_slots',
+    )
+    subject = models.ForeignKey(
+        'Subject',
+        on_delete=models.CASCADE,
+        related_name='timetable_slots',
+    )
+    teacher = models.ForeignKey(
+        'accounts.CustomUser',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='timetable_slots',
+        limit_choices_to={'is_teacher': True},
+    )
+    academic_year = models.ForeignKey(
+        'AcademicYear',
+        on_delete=models.CASCADE,
+        related_name='timetable_slots',
+    )
+    day        = models.CharField(max_length=10, choices=DAY_CHOICES)
+    start_time = models.TimeField()
+    end_time   = models.TimeField()
+    room       = models.CharField(max_length=50, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['day', 'start_time']
+        # same class cannot have two subjects at the exact same time
+        unique_together = [['class_assigned', 'academic_year', 'day', 'start_time']]
+        verbose_name = "Timetable Slot"
+        verbose_name_plural = "Timetable Slots"
+
+    def __str__(self):
+        return (f"{self.class_assigned.name} — {self.subject.name} "
+                f"— {self.get_day_display()} {self.start_time:%H:%M}")

@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Children • {{ request.user.username }}{% endblock %}
+
+{% block extra_head_scripts %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+  <div class="mb-8">
+    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+      My Children
+    </h1>
+    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+      {% if current_year %}{{ current_year.name }}{% else %}No active academic year{% endif %}
+    </p>
+  </div>
+
+  {% if not children_data %}
+    <div class="p-8 rounded-3xl bg-white dark:bg-gray-900
+                border border-yellow-200 dark:border-yellow-800 text-center">
+      <div class="inline-flex items-center justify-center w-16 h-16
+                  rounded-full bg-yellow-50 dark:bg-yellow-900/20 mb-4">
+        <i class="fa-solid fa-triangle-exclamation text-2xl text-yellow-500"></i>
+      </div>
+      <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+        No children linked yet
+      </h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Please contact your school administrator to link your children to your account.
+      </p>
+    </div>
+
+  {% else %}
+    <div class="space-y-8">
+      {% for item in children_data %}
+      <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
+                  rounded-3xl shadow-soft overflow-hidden">
+
+        {# Child header #}
+        <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800
+                    flex items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <img src="{% if item.student.profile_image %}{{ item.student.profile_image.url }}{% else %}https://ui-avatars.com/api/?name={{ item.student.username }}&size=48{% endif %}"
+                 alt="{{ item.student.username }}"
+                 class="w-12 h-12 rounded-full object-cover border-2
+                        border-brand-100 dark:border-brand-900">
+            <div>
+              <p class="font-bold text-gray-900 dark:text-white">
+                {{ item.student.get_full_name|default:item.student.username }}
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                {% if item.enrollment %}
+                  {{ item.enrollment.class_assigned.name }}
+                {% else %}
+                  Not enrolled this year
+                {% endif %}
+              </p>
+            </div>
+          </div>
+
+          {# Today status #}
+          {% if item.today_status == 'present' %}
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl
+                        bg-green-50 dark:bg-green-900/20
+                        border border-green-200 dark:border-green-800">
+              <span class="w-2 h-2 rounded-full bg-green-500"></span>
+              <span class="text-xs font-medium text-green-700 dark:text-green-300">
+                Present today
+              </span>
+            </div>
+          {% elif item.today_status == 'absent' %}
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl
+                        bg-red-50 dark:bg-red-900/20
+                        border border-red-200 dark:border-red-800">
+              <span class="w-2 h-2 rounded-full bg-red-500"></span>
+              <span class="text-xs font-medium text-red-700 dark:text-red-300">
+                Absent today
+              </span>
+            </div>
+          {% elif item.enrollment %}
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl
+                        bg-gray-50 dark:bg-gray-800
+                        border border-gray-200 dark:border-gray-700">
+              <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Not marked today
+              </span>
+            </div>
+          {% endif %}
+        </div>
+
+        {% if not item.enrollment %}
+          <div class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+            Not enrolled in any class for this academic year.
+          </div>
+        {% else %}
+          <div class="p-6">
+            {# Attendance summary #}
+            {% if item.attendance_summary %}
+            <div class="grid grid-cols-3 gap-4 mb-4">
+              <div class="text-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                  {{ item.attendance_summary.total }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Days recorded</p>
+              </div>
+              <div class="text-center p-3 rounded-xl bg-green-50 dark:bg-green-900/20">
+                <p class="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {{ item.attendance_summary.present }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Present</p>
+              </div>
+              <div class="text-center p-3 rounded-xl bg-red-50 dark:bg-red-900/20">
+                <p class="text-2xl font-bold text-red-600 dark:text-red-400">
+                  {{ item.attendance_summary.absent }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Absent</p>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs text-gray-500
+                        dark:text-gray-400 mb-1.5">
+              <span>Attendance rate</span>
+              <span class="font-semibold
+                           {% if item.attendance_summary.percentage >= 85 %}text-green-600 dark:text-green-400
+                           {% elif item.attendance_summary.percentage >= 60 %}text-yellow-600 dark:text-yellow-400
+                           {% else %}text-red-600 dark:text-red-400{% endif %}">
+                {{ item.attendance_summary.percentage }}%
+              </span>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div class="h-2 rounded-full
+                          {% if item.attendance_summary.percentage >= 85 %}bg-green-500
+                          {% elif item.attendance_summary.percentage >= 60 %}bg-yellow-500
+                          {% else %}bg-red-500{% endif %}"
+                   style="width: {{ item.attendance_summary.percentage }}%">
+              </div>
+            </div>
+            {# Grades summary #}
+            {% if item.grades %}
+            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400
+                        uppercase tracking-wide mb-3">
+                Grades
+              </p>
+              <div class="space-y-2">
+                {% for grade in item.grades %}
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-sm text-gray-900 dark:text-white">
+                      {{ grade.subject.name }}
+                    </span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                      {{ grade.get_exam_type_display }}
+                      {% if grade.term %} · {{ grade.term.name }}{% endif %}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">
+                      {{ grade.score }}/{{ grade.max_score }}
+                    </span>
+                    <span class="px-2 py-0.5 text-xs font-bold rounded
+                      {% if grade.letter_grade == 'A' %}bg-green-100 text-green-700
+                      {% elif grade.letter_grade == 'B' %}bg-blue-100 text-blue-700
+                      {% elif grade.letter_grade == 'C' %}bg-yellow-100 text-yellow-700
+                      {% elif grade.letter_grade == 'D' %}bg-orange-100 text-orange-700
+                      {% else %}bg-red-100 text-red-700{% endif %}">
+                      {{ grade.letter_grade }}
+                    </span>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+            {% else %}
+              <p class="text-sm text-center text-gray-500 dark:text-gray-400 py-4">
+                No attendance records yet.
+              </p>
+            {% endif %}
+          </div>
+        {% endif %}
+
+      </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {# Announcements #}
+  {% include 'partials/announcements_widget.html' %}
+  {# Notifications #}
+  {% include 'partials/notifications_widget.html' %}
+</div>
+{% endblock %}

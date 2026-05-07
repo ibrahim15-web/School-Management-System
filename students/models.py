@@ -165,3 +165,30 @@ class Enrollment(models.Model):
     def department(self):
         """Get department (if class is streamed by department)"""
         return self.class_assigned.department
+
+class ParentStudent(models.Model):
+    """
+    Links a parent account to one or more student accounts.
+    One parent can have multiple children, one student can have multiple parents.
+    """
+    parent = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='children',
+        limit_choices_to={'is_parent': True},
+    )
+    student = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='parents',
+        limit_choices_to={'is_student': True},
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [['parent', 'student']]
+        verbose_name = "Parent-Student Link"
+        verbose_name_plural = "Parent-Student Links"
+
+    def __str__(self):
+        return f"{self.parent.username} → {self.student.username}"

@@ -360,12 +360,24 @@ python manage.py runserver
 
 ---
 
-## 📐Planned Next Phases
+## 🔧 **Tech Stack**
 
-The following features are planned for future development:
+* **Python 3**
+* **Django**
+* HTML, CSS, JS
+* SQLite (default) / PostgreSQL (optional)
+* Django messages framework
+* Custom User Model + permissions
 
-- Exam scheduling and exam room assignment
-- Per-student report card generation and export (PDF)
-- Finance module for fee tracking and payment records
-- Advanced reporting and data export for attendance and grades
-- Email-based notification delivery in addition to in-app notifications
+---
+
+## 📐 **Future Enhancements**
+
+* Student ID cards
+* Classes & subjects
+* Attendance system
+* Fee management
+* API endpoints
+* Push notifications
+
+---

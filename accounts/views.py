@@ -126,11 +126,11 @@ def forgot_password(request):
         email = request.POST.get("email")
         try:
             user = User.objects.get(email=email)
-            code = str(random.randint(100000, 999999))
+            code = str(random.randint(10000, 99999))
 
             request.session['reset_email'] = email
             request.session['reset_code'] = code
-            request.session['reset_expires'] = time.time() + 300  # 5 minutes
+            request.session['reset_expires'] = time.time() + 180  # 5 minutes
             send_mail(
                 'Password Reset Code',
                 f'Your reset code is: {code}',

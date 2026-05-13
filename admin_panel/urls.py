@@ -6,6 +6,7 @@ urlpatterns = [
     path('students/', views.admin_students, name='admin_students'),
     path('students/<uuid:user_id>/assign-class/', views.admin_assign_student_class, name='admin_assign_student_class'),
     path('students/<uuid:user_id>/remove-class/', views.admin_remove_student_class, name='admin_remove_student_class'),
+    path('enroll-student/', views.admin_enroll_student, name='admin_enroll_student'),
     # ── Teacher management ──
     path('teachers/', views.admin_teachers, name='admin_teachers'),
     path('teachers/<uuid:user_id>/assign/', views.admin_assign_teacher, name='admin_assign_teacher'),

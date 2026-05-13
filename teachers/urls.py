@@ -6,6 +6,7 @@ urlpatterns = [
     path('assignment/<uuid:assignment_id>/students/', teacher_students_view, name='teacher_students'),
     path('students/', teacher_all_students, name='teacher_all_students'),
     path('attendance/', teacher_attendance, name='teacher_attendance'),
+    path('attendance/report/', attendance_report, name='attendance_report'),
     path('attendance/<uuid:assignment_id>/', mark_attendance, name='mark_attendance'),
     # Admin-only: mark daily attendance for all teachers
     path('teacher-attendance/', mark_teacher_attendance, name='mark_teacher_attendance'),

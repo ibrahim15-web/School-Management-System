@@ -39,6 +39,9 @@ def student_dashboard(request):
     attendance_summary = None
     recent_attendance = []
     today_status      = None   # present | absent | None (not marked)
+    student_grades     = [] 
+    timetable          = {}
+    DAYS               = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']  # ADD THIS
     if enrollment:
         assigned_class = enrollment.class_assigned
         # Subjects come directly from the class M2M

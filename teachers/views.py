@@ -7,6 +7,7 @@ from django.db.models import Q
 from .models import *
 from academics.models import *
 from accounts.models import CustomUser
+from teachers.analytics import get_filtered_attendance
 from students.models import Enrollment, ParentStudent
 from core.models import Announcement, Notification
 
@@ -145,7 +146,6 @@ def teacher_attendance(request):
     assignments = request.user.teaching_assignments.select_related(
         'class_assigned', 'subject'
     )
-    
     return render(request, 'teachers/attendance.html', {
         'assignments': assignments
     })
@@ -458,14 +458,10 @@ def teacher_schedule(request):
     if not request.user.is_teacher:
         messages.error(request, 'Access denied.')
         return redirect('home')
-
-    from academics.models import TimetableSlot
-
     try:
         current_year = AcademicYear.objects.get(is_current=True)
     except AcademicYear.DoesNotExist:
         current_year = None
-
     slots = []
     if current_year:
         slots = (
@@ -489,4 +485,99 @@ def teacher_schedule(request):
         'schedule':     schedule,
         'days':         DAYS,
         'total_slots':  len(slots),
+    })
+
+@login_required(login_url='login')
+def attendance_report(request):
+    """
+    Attendance report accessible by teachers and admins.
+    Teachers see only their assigned classes.
+    Admins see all classes for the current year.
+    """
+    if not (request.user.is_teacher or request.user.is_staff or request.user.is_superuser):
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    try:
+        current_year = AcademicYear.objects.get(is_current=True)
+    except AcademicYear.DoesNotExist:
+        current_year = None
+
+    # Build class list based on role
+    if request.user.is_staff or request.user.is_superuser:
+        classes = (
+            Class.objects.filter(academic_year=current_year).order_by('name')
+            if current_year else []
+        )
+    else:
+        assigned_class_ids = (
+            request.user.teaching_assignments
+            .filter(academic_year=current_year)
+            .values('class_assigned')
+            if current_year else []
+        )
+        classes = Class.objects.filter(
+            id__in=assigned_class_ids
+        ).order_by('name')
+    # Read GET filters
+    class_id   = request.GET.get('class_id',   '').strip()
+    student_id = request.GET.get('student_id', '').strip()
+    date_from  = request.GET.get('date_from',  '').strip()
+    date_to    = request.GET.get('date_to',    '').strip()
+    # Student dropdown — only populated when a class is selected
+    students = []
+    if class_id and current_year:
+        students = (
+            CustomUser.objects
+            .filter(
+                enrollments__class_assigned_id=class_id,
+                enrollments__academic_year=current_year,
+                enrollments__status='active',
+            )
+            .distinct()
+            .order_by('username')
+        )
+    records = None
+    summary = None
+    # Only query when at least one filter is active
+    if class_id or student_id or date_from or date_to: 
+        qs = get_filtered_attendance(
+            class_id=class_id   or None,
+            student_id=student_id or None,
+            date_from=date_from  or None,
+            date_to=date_to      or None,
+            academic_year=current_year,
+        )
+        # Teachers must not see records outside their assigned classes
+        if request.user.is_teacher and not request.user.is_staff:
+            teacher_class_ids = (
+                request.user.teaching_assignments
+                .filter(academic_year=current_year)
+                .values_list('class_assigned', flat=True)
+            )
+            qs = qs.filter(class_assigned__in=teacher_class_ids)
+
+        total   = qs.count()
+        present = qs.filter(status=Attendance.STATUS_PRESENT).count()
+        absent  = total - present
+        pct     = round((present / total) * 100, 1) if total > 0 else 0
+
+        summary = {
+            'total':      total,
+            'present':    present,
+            'absent':     absent,
+            'percentage': pct,
+        }
+
+        records = qs[:300]  # safety cap — prevents accidental heavy pages
+
+    return render(request, 'teachers/attendance_report.html', {
+        'current_year':       current_year,
+        'classes':            classes,
+        'students':           students,
+        'records':            records,
+        'summary':            summary,
+        'selected_class_id':  class_id,
+        'selected_student_id': student_id,
+        'date_from':          date_from,
+        'date_to':            date_to,
     })

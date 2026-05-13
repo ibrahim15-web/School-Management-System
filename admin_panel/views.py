@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.shortcuts import render, get_object_or_404, redirect
 from datetime import date
 from django.contrib import messages
@@ -1156,3 +1156,108 @@ def admin_timetable_delete(request, slot_id):
         slot.delete()
         messages.success(request, 'Slot deleted.')
     return redirect('admin_timetable')
+
+@login_required(login_url='login')
+def admin_enroll_student(request):
+    if not _require_admin(request):
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+
+    try:
+        current_year = AcademicYear.objects.get(is_current=True)
+    except AcademicYear.DoesNotExist:
+        current_year = None
+
+    classes = Class.objects.filter(
+        academic_year=current_year
+    ).order_by('name') if current_year else []
+
+    if request.method == 'POST':
+        username      = request.POST.get('username',     '').strip()
+        email         = request.POST.get('email',        '').strip()
+        password      = request.POST.get('password',     '').strip()
+        first_name    = request.POST.get('first_name',   '').strip()
+        last_name     = request.POST.get('last_name',    '').strip()
+        phone_number  = request.POST.get('phone_number', '').strip()
+        national_id   = request.POST.get('national_id',  '').strip()
+        class_id      = request.POST.get('class_id',     '').strip()
+        national_id_image = request.FILES.get('national_id_image')
+        profile_image     = request.FILES.get('profile_image')
+        # --- Validation ---
+        errors = []
+        if not username:
+            errors.append('Username is required.')
+        elif CustomUser.objects.filter(username=username).exists():
+            errors.append('That username is already taken.')
+        if not email:
+            errors.append('Email is required.')
+        elif CustomUser.objects.filter(email=email).exists():
+            errors.append('That email is already in use.')
+        if not password:
+            errors.append('Password is required.')
+        elif len(password) < 8:
+            errors.append('Password must be at least 8 characters.')
+        if not phone_number:
+            errors.append('Phone number is required.')
+        elif CustomUser.objects.filter(phone_number=phone_number).exists():
+            errors.append('That phone number is already in use.')
+        if not national_id:
+            errors.append('National ID is required.')
+        elif CustomUser.objects.filter(national_id=national_id).exists():
+            errors.append('That national ID is already in use.')
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'admin-panel/admin_enroll_student.html', {
+                'classes':      classes,
+                'current_year': current_year,
+            })
+        # --- Create the student ---
+        try:
+            with transaction.atomic():
+                user = CustomUser.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    first_name=first_name,
+                    last_name=last_name,
+                    phone_number=phone_number,
+                    national_id=national_id,
+                )
+                user.is_student              = True
+                user.is_active               = True
+                user.is_member_of_this_school = True
+                user.status                  = 'approved'
+                if national_id_image:
+                    user.national_id_image = national_id_image
+                if profile_image:
+                    user.profile_image = profile_image
+                user.save()
+                # Optional class assignment in the same step
+                if class_id and current_year:
+                    class_obj = Class.objects.get(
+                        id=class_id,
+                        academic_year=current_year
+                    )
+                    Enrollment.objects.create(
+                        student=user,
+                        class_assigned=class_obj,
+                        academic_year=current_year,
+                        status='active',
+                    )
+                    messages.success(
+                        request,
+                        f'Student "{username}" created and enrolled in {class_obj.name}.'
+                    )
+                else:
+                    messages.success(
+                        request,
+                        f'Student "{username}" created successfully. You can assign a class from the students list.'
+                    )
+            return redirect('admin_students')
+        except Exception as e:
+            messages.error(request, f'Something went wrong: {e}')
+    return render(request, 'admin-panel/admin_enroll_student.html', {
+        'classes':      classes,
+        'current_year': current_year,
+    })

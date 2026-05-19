@@ -9,6 +9,7 @@ urlpatterns = [
     path('enroll-student/', views.admin_enroll_student, name='admin_enroll_student'),
     # ── Teacher management ──
     path('teachers/', views.admin_teachers, name='admin_teachers'),
+    path('teachers/add/', views.admin_add_teacher, name='admin_add_teacher'),
     path('teachers/<uuid:user_id>/assign/', views.admin_assign_teacher, name='admin_assign_teacher'),
     path('teachers/<uuid:user_id>/remove-assignment/<uuid:assignment_id>/', views.admin_remove_teacher_assignment, name='admin_remove_teacher_assignment'),
     # ── Class management ──
@@ -47,6 +48,7 @@ urlpatterns = [
     path('users/<uuid:user_id>/delete/', views.admin_delete_user, name='admin_delete_user'),
     # ── Parent management ──
     path('parents/', views.admin_parents, name='admin_parents'),
+    path('parents/add/', views.admin_add_parent, name='admin_add_parent'),
     path('parents/<uuid:user_id>/assign/', views.admin_assign_parent, name='admin_assign_parent'),
     # ── Timetable management ──
     path('timetable/', views.admin_timetable, name='admin_timetable'),

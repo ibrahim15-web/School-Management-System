@@ -1261,3 +1261,145 @@ def admin_enroll_student(request):
         'classes':      classes,
         'current_year': current_year,
     })
+
+@login_required(login_url='login')
+def admin_add_teacher(request):
+    if not _require_admin(request):
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    if request.method == 'POST':
+        username          = request.POST.get('username',     '').strip()
+        email             = request.POST.get('email',        '').strip()
+        password          = request.POST.get('password',     '').strip()
+        first_name        = request.POST.get('first_name',   '').strip()
+        last_name         = request.POST.get('last_name',    '').strip()
+        phone_number      = request.POST.get('phone_number', '').strip()
+        national_id       = request.POST.get('national_id',  '').strip()
+        national_id_image = request.FILES.get('national_id_image')
+        profile_image     = request.FILES.get('profile_image')
+        # --- Validation ---
+        errors = []
+        if not username:
+            errors.append('Username is required.')
+        elif CustomUser.objects.filter(username=username).exists():
+            errors.append('That username is already taken.')
+        if not email:
+            errors.append('Email is required.')
+        elif CustomUser.objects.filter(email=email).exists():
+            errors.append('That email is already in use.')
+        if not password:
+            errors.append('Password is required.')
+        elif len(password) < 8:
+            errors.append('Password must be at least 8 characters.')
+        if not phone_number:
+            errors.append('Phone number is required.')
+        elif CustomUser.objects.filter(phone_number=phone_number).exists():
+            errors.append('That phone number is already in use.')
+        if not national_id:
+            errors.append('National ID is required.')
+        elif CustomUser.objects.filter(national_id=national_id).exists():
+            errors.append('That national ID is already in use.')
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'admin-panel/admin_add_teacher.html')
+        # --- Create the teacher ---
+        try:
+            with transaction.atomic():
+                user = CustomUser.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    first_name=first_name,
+                    last_name=last_name,
+                    phone_number=phone_number,
+                    national_id=national_id,
+                )
+                user.is_teacher               = True
+                user.is_active                = True
+                user.is_member_of_this_school = True
+                user.status                   = 'approved'
+                if national_id_image:
+                    user.national_id_image = national_id_image
+                if profile_image:
+                    user.profile_image = profile_image
+                user.save()
+            messages.success(
+                request,
+                f'Teacher "{username}" created successfully. You can now assign them to classes.'
+            )
+            return redirect('admin_teachers')
+        except Exception as e:
+            messages.error(request, f'Something went wrong: {e}')
+    return render(request, 'admin-panel/admin_add_teacher.html')
+
+@login_required(login_url='login')
+def admin_add_parent(request):
+    if not _require_admin(request):
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+    if request.method == 'POST':
+        username          = request.POST.get('username',     '').strip()
+        email             = request.POST.get('email',        '').strip()
+        password          = request.POST.get('password',     '').strip()
+        first_name        = request.POST.get('first_name',   '').strip()
+        last_name         = request.POST.get('last_name',    '').strip()
+        phone_number      = request.POST.get('phone_number', '').strip()
+        national_id       = request.POST.get('national_id',  '').strip()
+        national_id_image = request.FILES.get('national_id_image')
+        profile_image     = request.FILES.get('profile_image')
+        # --- Validation ---
+        errors = []
+        if not username:
+            errors.append('Username is required.')
+        elif CustomUser.objects.filter(username=username).exists():
+            errors.append('That username is already taken.')
+        if not email:
+            errors.append('Email is required.')
+        elif CustomUser.objects.filter(email=email).exists():
+            errors.append('That email is already in use.')
+        if not password:
+            errors.append('Password is required.')
+        elif len(password) < 8:
+            errors.append('Password must be at least 8 characters.')
+        if not phone_number:
+            errors.append('Phone number is required.')
+        elif CustomUser.objects.filter(phone_number=phone_number).exists():
+            errors.append('That phone number is already in use.')
+        if not national_id:
+            errors.append('National ID is required.')
+        elif CustomUser.objects.filter(national_id=national_id).exists():
+            errors.append('That national ID is already in use.')
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'admin-panel/admin_add_parent.html')
+        # --- Create the parent ---
+        try:
+            with transaction.atomic():
+                user = CustomUser.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    first_name=first_name,
+                    last_name=last_name,
+                    phone_number=phone_number,
+                    national_id=national_id,
+                )
+                user.is_parent                = True
+                user.is_active                = True
+                user.is_member_of_this_school = True
+                user.status                   = 'approved'
+                if national_id_image:
+                    user.national_id_image = national_id_image
+                if profile_image:
+                    user.profile_image = profile_image
+                user.save()
+            messages.success(
+                request,
+                f'Parent "{username}" created successfully. You can now link their children.'
+            )
+            return redirect('admin_assign_parent', user_id=user.id)
+        except Exception as e:
+            messages.error(request, f'Something went wrong: {e}')
+    return render(request, 'admin-panel/admin_add_parent.html')

@@ -106,22 +106,38 @@
                         <div class="border-t border-gray-100 dark:border-gray-800"></div>
 
                         <a href="{% url 'profile' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">My Profile</a>
-                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Settings</a>
+                        <a href="{% url 'profile_update' %}"
+                            class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200
+                                    hover:bg-gray-100 dark:hover:bg-gray-800">
+                            Settings
+                        </a>
                         
                         {# Admin section inside user dropdown for staff users #}
                         {% if user.is_staff %}
-                          <div class="border-t border-gray-100 dark:border-gray-800"></div>
-                          <div class="px-2 py-1 text-xs text-gray-400 dark:text-gray-500">Admin Tools</div>
-                          <a href="#" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Manage Users</a>
-                          <a href="#" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Approvals</a>
-                          <a href="{% url 'announcement_list' %}"
-                            class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200
-                                    hover:bg-gray-100 dark:hover:bg-gray-800">
-                            Announcements
-                          </a>
-                          {% if user.is_superuser %}
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Site Settings</a>
-                          {% endif %}
+                            <div class="border-t border-gray-100 dark:border-gray-800"></div>
+                            <div class="px-2 py-1 text-xs text-gray-400 dark:text-gray-500">Admin Tools</div>
+                            <a href="{% url 'admin_users' %}"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200
+                                        hover:bg-gray-100 dark:hover:bg-gray-800">
+                                Manage Users
+                            </a>
+                            <a href="{% url 'admin_dashboard' %}#pending-requests"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200
+                                        hover:bg-gray-100 dark:hover:bg-gray-800">
+                                Approvals
+                            </a>
+                            <a href="{% url 'announcement_list' %}"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200
+                                        hover:bg-gray-100 dark:hover:bg-gray-800">
+                                Announcements
+                            </a>
+                            {% if user.is_superuser %}
+                                <a href="{% url 'admin_academic_years' %}"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200
+                                        hover:bg-gray-100 dark:hover:bg-gray-800">
+                                Site Settings
+                                </a>
+                            {% endif %}
                         {% endif %}
 
                         <div class="border-t border-gray-100 dark:border-gray-800"></div>
@@ -149,8 +165,14 @@
         {% if user.is_authenticated and user.is_staff %}
           <div class="px-2 py-1 text-xs text-gray-400 dark:text-gray-500">Admin</div>
           <a href="{% url 'admin_dashboard' %}" class="block px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">Admin Dashboard</a>
-          <a href="#" class="block px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">Manage Users</a>
-          <a href="#" class="block px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">Approvals</a>
+          <a href="{% url 'admin_users' %}"
+            class="block px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+            Manage Users
+          </a>
+          <a href="{% url 'admin_dashboard' %}#pending-requests"
+            class="block px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+            Approvals
+          </a>
 
           {% if user.is_superuser %}
             <a href="#" class="block px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">Site Settings</a>
@@ -161,7 +183,10 @@
         {% if user.is_authenticated %}
             <div class="border-t border-gray-100 dark:border-gray-800 my-2"></div>
             <a href="{% url 'profile' %}" class="block px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">My Profile</a>
-            <a href="#" class="block px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">Settings</a>
+            <a href="{% url 'profile_update' %}"
+                class="block px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                Settings
+            </a>
         {% endif %}
     </div>
 </nav>

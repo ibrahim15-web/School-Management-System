@@ -26,8 +26,20 @@
       </p>
     </div>
 
-    {# Today's status badge #}
-    <div class="flex-shrink-0">
+    <div class="flex items-center gap-3 flex-shrink-0">
+
+      {# Download Report Card — only show if enrolled #}
+      {% if enrollment %}
+      <a href="{% url 'student_report_card_pdf' %}"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                bg-brand-600 hover:bg-brand-700 text-white text-sm
+                font-semibold transition-colors shadow-sm">
+        <i class="fa-solid fa-file-pdf text-sm"></i>
+        Download Report Card
+      </a>
+      {% endif %}
+
+      {# Today's status badge — already exists, keep it #}
       {% if today_status == 'present' %}
         <div class="flex items-center gap-2 px-4 py-2 rounded-xl
                     bg-green-50 dark:bg-green-900/20
@@ -56,6 +68,7 @@
           </span>
         </div>
       {% endif %}
+
     </div>
   </div>
 

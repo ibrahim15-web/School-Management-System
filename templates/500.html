@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Server Error • School Management{% endblock %}
+
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center px-4">
+  <div class="text-center max-w-md">
+
+    <p class="text-8xl font-extrabold text-red-500 dark:text-red-400
+              leading-none tracking-tight">
+      500
+    </p>
+
+    <h1 class="mt-4 text-2xl font-bold text-gray-900 dark:text-white">
+      Something went wrong
+    </h1>
+
+    <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+      An unexpected error occurred on the server.
+      The issue has been noted. Please try again in a moment.
+    </p>
+
+    <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="/"
+         class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700
+                text-white text-sm font-semibold transition-colors">
+        Back to Home
+      </a>
+      <button onclick="history.back()"
+              class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700
+                     text-gray-700 dark:text-gray-300 hover:bg-gray-100
+                     dark:hover:bg-gray-800 text-sm transition-colors">
+        Go Back
+      </button>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

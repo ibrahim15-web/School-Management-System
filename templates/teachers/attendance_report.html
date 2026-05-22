@@ -179,9 +179,9 @@
   {% endif %}
 
   {# Results Table #}
-  {% if records is not None %}
+  {% if page_obj is not None %}
 
-    {% if records %}
+    {% if page_obj and page_obj.object_list %}
     <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
                 rounded-2xl shadow-soft overflow-hidden">
 
@@ -191,7 +191,7 @@
           Results
         </p>
         <p class="text-xs text-gray-500 dark:text-gray-400">
-          Showing up to 300 records
+          {{ page_obj.paginator.count }} record{{ page_obj.paginator.count|pluralize }}
         </p>
       </div>
 
@@ -208,7 +208,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-            {% for record in records %}
+            {% for record in page_obj %}
             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
 
               <td class="px-5 py-3 font-medium text-gray-900 dark:text-white">
@@ -262,6 +262,50 @@
           </tbody>
         </table>
       </div>
+      {% if page_obj.paginator.num_pages > 1 %}
+      <div class="px-5 py-4 border-t border-gray-100 dark:border-gray-800
+                  flex items-center justify-between gap-4">
+
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          · {{ page_obj.paginator.count }} total records
+        </p>
+
+        <div class="flex items-center gap-1">
+
+          {% if page_obj.has_previous %}
+            <a href="?class_id={{ selected_class_id }}&student_id={{ selected_student_id }}&date_from={{ date_from }}&date_to={{ date_to }}&page=1"
+               class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700
+                      text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+              «
+            </a>
+            <a href="?class_id={{ selected_class_id }}&student_id={{ selected_student_id }}&date_from={{ date_from }}&date_to={{ date_to }}&page={{ page_obj.previous_page_number }}"
+               class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700
+                      text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+              ‹ Prev
+            </a>
+          {% endif %}
+
+          <span class="px-3 py-1.5 text-xs rounded-lg bg-brand-600 text-white font-medium">
+            {{ page_obj.number }}
+          </span>
+
+          {% if page_obj.has_next %}
+            <a href="?class_id={{ selected_class_id }}&student_id={{ selected_student_id }}&date_from={{ date_from }}&date_to={{ date_to }}&page={{ page_obj.next_page_number }}"
+               class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700
+                      text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+              Next ›
+            </a>
+            <a href="?class_id={{ selected_class_id }}&student_id={{ selected_student_id }}&date_from={{ date_from }}&date_to={{ date_to }}&page={{ page_obj.paginator.num_pages }}"
+               class="px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700
+                      text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+              »
+            </a>
+          {% endif %}
+
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     {% else %}

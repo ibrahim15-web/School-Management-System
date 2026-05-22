@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.timezone import now
 from django.db.models import Q
+from django.core.paginator import Paginator
 
 from .models import *
 from academics.models import *
@@ -536,7 +537,7 @@ def attendance_report(request):
             .distinct()
             .order_by('username')
         )
-    records = None
+    page_obj = None
     summary = None
     # Only query when at least one filter is active
     if class_id or student_id or date_from or date_to: 
@@ -555,29 +556,28 @@ def attendance_report(request):
                 .values_list('class_assigned', flat=True)
             )
             qs = qs.filter(class_assigned__in=teacher_class_ids)
-
         total   = qs.count()
         present = qs.filter(status=Attendance.STATUS_PRESENT).count()
         absent  = total - present
         pct     = round((present / total) * 100, 1) if total > 0 else 0
-
         summary = {
             'total':      total,
             'present':    present,
             'absent':     absent,
             'percentage': pct,
         }
-
-        records = qs[:300]  # safety cap — prevents accidental heavy pages
-
+        paginator = Paginator(qs, 50)
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+    
     return render(request, 'teachers/attendance_report.html', {
         'current_year':       current_year,
         'classes':            classes,
         'students':           students,
-        'records':            records,
+        'page_obj':           page_obj,
         'summary':            summary,
         'selected_class_id':  class_id,
-        'selected_student_id': student_id,
+        'selected_student_id':student_id,
         'date_from':          date_from,
         'date_to':            date_to,
     })

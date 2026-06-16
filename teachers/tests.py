@@ -17,8 +17,9 @@ from datetime import date
 
 from django.test import TestCase
 from django.urls import reverse
-from itertools import count
 from django.utils import timezone
+from itertools import count as _count
+_seq = _count(1)
 
 from accounts.models import CustomUser
 from academics.models import (
@@ -54,23 +55,14 @@ def make_class(year, name="Grade 10-A", capacity=30):
     return Class.objects.create(name=name, academic_year=year, capacity=capacity)
 
 
-_user_seq = count(1)
-
 def make_user(username, role, **kwargs):
-    """
-    Create a fully approved CustomUser with the given role flag.
-    role must be one of: 'student', 'teacher', 'parent', 'staff'
-    """
-    seq = next(_user_seq)
-    phone_number = f"08{seq:08d}"
-    national_id = f"99{seq:08d}"
-
+    seq = next(_seq)
     user = CustomUser.objects.create_user(
         username=username,
         email=f"{username}@example.com",
         password="testpass123",
-        phone_number=phone_number,
-        national_id=national_id,
+        phone_number=f"08{seq:09d}",
+        national_id=f"99{seq:09d}",
     )
     user.is_active = True
     user.is_member_of_this_school = True

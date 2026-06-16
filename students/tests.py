@@ -15,6 +15,8 @@ Run with:
 from django.test import TestCase
 from django.urls import reverse
 from django.core.exceptions import ValidationError
+from itertools import count as _count
+_seq = _count(1)
 
 from accounts.models import CustomUser
 from academics.models import AcademicYear, Class, Subject
@@ -47,13 +49,13 @@ def make_class(year, name="Grade 10-A", capacity=30):
 
 
 def make_approved_student(username="student1", **kwargs):
-    """Create a student who has passed the admin approval workflow."""
+    seq = next(_seq)
     user = CustomUser.objects.create_user(
         username=username,
         email=f"{username}@example.com",
         password="testpass123",
-        phone_number=f"0812{username[-4:].zfill(4)}",
-        national_id=f"1234{username[-4:].zfill(4)}",
+        phone_number=f"08{seq:09d}",
+        national_id=f"12{seq:09d}",
     )
     user.is_student = True
     user.is_active = True
@@ -66,12 +68,13 @@ def make_approved_student(username="student1", **kwargs):
 
 
 def make_approved_teacher(username="teacher1"):
+    seq = next(_seq)
     user = CustomUser.objects.create_user(
         username=username,
         email=f"{username}@example.com",
         password="testpass123",
-        phone_number=f"0813{username[-4:].zfill(4)}",
-        national_id=f"9999{username[-4:].zfill(4)}",
+        phone_number=f"09{seq:09d}",
+        national_id=f"99{seq:09d}",
     )
     user.is_teacher = True
     user.is_active = True
@@ -82,12 +85,13 @@ def make_approved_teacher(username="teacher1"):
 
 
 def make_approved_parent(username="parent1"):
+    seq = next(_seq)
     user = CustomUser.objects.create_user(
         username=username,
         email=f"{username}@example.com",
         password="testpass123",
-        phone_number=f"0814{username[-4:].zfill(4)}",
-        national_id=f"8888{username[-4:].zfill(4)}",
+        phone_number=f"07{seq:09d}",
+        national_id=f"88{seq:09d}",
     )
     user.is_parent = True
     user.is_active = True
